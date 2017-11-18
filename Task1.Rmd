@@ -56,10 +56,18 @@ Finally, we can obtain the conditional variance applying exponential
 sigma_2 =  exp(llr2$mt)
 ```
 
-
+Draw the residuals against $x_i$ and superimpose the estimated function $\hat{\sigma}^2(x)$
 ```{r}
-plot(Yr,((lgWeight - llr$mt)^2))
+plot(Yr,((lgWeight - llr$mt)^2)) # residual square against x_i
 lines(Yr, sigma_2, col=3, lwd=3)
 
-plot(Yr,sqrt(sigma_2))
+```
+Draw the function $\hat{m}(x)$ and superimpose the bands $\hat{m}(x) ± 1.96\hat{\sigma}(x)$
+```{r}
+sigma = sqrt(sigma_2)
+plot(Yr,lgWeight)
+lines(Yr,llr$mt,col=3,lwd=3) # mt from step 1
+lines(Yr,llr$mt+1.96*sigma,col=4,lwd=1)
+lines(Yr,llr$mt-1.96*sigma,col=4,lwd=1)
+
 ```
