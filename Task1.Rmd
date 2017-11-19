@@ -97,8 +97,55 @@ par(mfrow=c(2,2))
 degrees <- c(0,1,2,3,4,5)
 
 for (d in degrees) {
-  lpr_visual(x=Yr, y=lgWeight, h=10, q=d, tg=c(20,40,60),
+  lpr_visual(x=Yr, y=lgWeight, h=10, q=d, tg=c(20,40,60,80),
            xlab="Yr", ylab="lgWeight",
-           main=paste('Degree local pol.: q = ', d, sep = ""),type.kernel="epan")
+           main=paste('Degree local pol.: q = ', d, sep = ""), type.kernel="epan")
 }
+```
+We can see that the degree that allows to approximate better the real curve is 3, therefore we are going to use this degree and variate the smooth parameter to obtain the best fit.
+
+```{r}
+degree <- 3
+hs <- c(10,13,16,20)
+for (h in hs) {
+  lpr_visual(x=Yr, y=lgWeight, h=h, q=degree, tg=c(20,40,60,80),
+           xlab="Yr", ylab="lgWeight",
+           main=paste('Degree local pol.: q =', paste(degree, paste(", h = ", h))), type.kernel="epan")
+}
+```
+
+After tunning the smoothing parameter $h$ we see that the best fit was obtainend using $h=13$, and whith this we will build the polynomial regression
+```{r}
+h <- 13
+lpr_visual(x=Yr, y=lgWeight, h=h, q=degree, tg=c(20,40,60,80),
+           xlab="Yr", ylab="lgWeight",
+           main=paste('Degree local pol.: q =', paste(degree, paste(", h = ", h))), type.kernel="epan")
+lpr <- locpolreg(x=Yr, y=lgWeight, h=h, q=degree, r=1, main=paste("r=1, q=",paste(degree, paste(", h=",h))), type.kernel="epan")
+```
+
+Repeating the same proceure we used before, we will transform the estimated residuals and perform the regression over $z_i$
+```{r}
+# step 2 Transform the estimated residuals z_i = log((y_i - lpr$mtgr)^2)
+z_i = log((lgWeight - lpr$mtgr)^2)
+
+# step 3 Fit a nonparametric regression to data (Yr,z_i) and 
+# call the estimated function qˆ(x).
+lpr2 <-locpolreg(x=Yr, y=z_i, h=h, q=degree, r=1, main=paste("r=1, q=",paste(degree, paste(", h=",h))), type.kernel="epan")
+```
+
+Finally, we estimate the variance $\sigma^2$
+```{r}
+# step 4 Estimate sigma_2(x)
+sigma_2 =  exp(lpr2$mtgr)
+plot(Yr,((lgWeight - lpr2$mtgr)^2)) # residual square against x_i
+lines(Yr, sigma_2, col=3, lwd=3)
+```
+
+Function $\hat{m}(x)$ and the superimposed bands $\hat{m}(x)\pm 1.96\hat{\sigma}(x)$
+```{r}
+sigma = sqrt(sigma_2)
+plot(Yr,lgWeight)
+lines(Yr,lpr2$mtgr,col=3,lwd=3) # mt from step 1
+lines(Yr,lpr2$mtgr+1.96*sigma,col=4,lwd=1)
+lines(Yr,lpr2$mtgr-1.96*sigma,col=4,lwd=1)
 ```
