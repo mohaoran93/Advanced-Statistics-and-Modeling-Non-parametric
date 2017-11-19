@@ -14,7 +14,7 @@ source("loc_lin_reg.R")
 
 Having the heteroscedastic regression model $$Y = m(x) + \sigma(x)\varepsilon = m(x) + \epsilon,$$, where $E(\varepsilon) = 0, V(\varepsilon) = 1$
 
-we want to estimate the function that represents the conditional variance $\sigma^2$ of the variable lgWeigth (log(Weight)) from the aircraft dataset, given that the explanatory variable (Yr) is equal to a value x. We will use nonparametric methods to do that. Below is the plot the response variable vs the explanatory variable.
+we want to estimate the function that represents the conditional variance $\sigma^2$ of the variable lgWeigth (log(Weight)) from the aircraft dataset, given that the explanatory variable (Yr) is equal to a value x. We will use nonparametric methods to do that. Below is the plot of the response variable vs the explanatory variable.
 
 ```{r}
 data(aircraft)
@@ -32,22 +32,20 @@ The result is shown below, where we can see an smooth function (in red) of the e
 ```{r}
 # step 1 Fit a nonparametric regression to data (xi,yi) and save 
 #   the estimated values mˆ (xi).
-par(mfrow=c(3,5))
+par(mfrow=c(2,2))
 hs <- c(1,1.4,4,8.4,10)
-tg = seq(min(Yr), max(Yr), length=51)
+tg <- Yr
 for (h in hs) {
   llr <- loc.lin.reg(x=Yr, y=lgWeight, h=h, tg=tg)
   plot(Yr,lgWeight, main = paste("h = ", h, sep = ""))
   lines(tg, llr$mt, col=2, lwd=2)
 }
 ```
-Changing the smooth parameter we can see that as $h$ increases the function curve becomes smoother. We will choose the combination $h = 4$
-# TODO I do not think that t really influences the estimator.
 
+Changing the smooth parameter we can see that as $h$ increases the function curve becomes smoother. We will choose the combination $h = 4$
 ```{r}
 h <- 4
 llr <- loc.lin.reg(x=Yr, y=lgWeight, h=h, tg=tg)
-# TODO with any other length except 709, it will cause problem on claculating log((lgWeight - llr$mt)^2) : longer object length is not a multiple of shorter object length
 ```
 
 Now we are going to transform the estimated residuals applying logarithm to the square of it $\hat\epsilon_i = (y_i - \hat{m}(x_i))^2$, which represents the variance (the square deviation) of the model. $$z_i = log\epsilon_i^2 = log((y_i - \hat{m}(x_i))^2)$$
@@ -73,7 +71,7 @@ Finally, we can obtain the conditional variance applying exponential to the esti
 sigma_2 =  exp(llr2$mt)
 ```
 
-Plotting the residuals against $x_i$ we superimposed the estimated function $\hat{\sigma}^2(x)$
+Plotting the residuals against $x_i$ we superimpose the estimated function $\hat{\sigma}^2(x)$
 ```{r}
 plot(Yr,((lgWeight - llr$mt)^2)) # residual square against x_i
 lines(tg, sigma_2, col=3, lwd=3)
@@ -102,6 +100,7 @@ for (d in degrees) {
            main=paste('Degree local pol.: q = ', d, sep = ""), type.kernel="epan")
 }
 ```
+
 We can see that the degree that allows to approximate better the real curve is 3, therefore we are going to use this degree and variate the smooth parameter to obtain the best fit.
 
 ```{r}
