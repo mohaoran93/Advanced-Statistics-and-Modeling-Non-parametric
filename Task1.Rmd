@@ -1,9 +1,10 @@
 ---
-title: "Non-parametric models - Estimating conditional variance"
+title: "Advanced Statistical Modeling"
+subtitle: "Non-parametric models - Estimating conditional variance"
 output: pdf_document
 author: "Haoran Mo, Alexandra Yamaui"
 ---
-
+  
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 library(sm)
@@ -33,8 +34,8 @@ The result is shown below, where we can see an smooth function (in red) of the e
 # step 1 Fit a nonparametric regression to data (xi,yi) and save 
 #   the estimated values mˆ (xi).
 par(mfrow=c(2,2))
-hs <- c(1,1.4,4,8.4,10)
-tg <- Yr
+hs <- c(1,1.4,4,6,8.4,10)
+tg = seq(min(Yr), max(Yr), length=709)
 for (h in hs) {
   llr <- loc.lin.reg(x=Yr, y=lgWeight, h=h, tg=tg)
   plot(Yr,lgWeight, main = paste("h = ", h, sep = ""))
@@ -42,7 +43,7 @@ for (h in hs) {
 }
 ```
 
-Changing the smooth parameter we can see that as $h$ increases the function curve becomes smoother. We will choose the combination $h = 4$
+Changing the smoothing parameter we can see that as $h$ increases the function curve becomes smoother. We will choose the combination $h = 4$
 ```{r}
 h <- 4
 llr <- loc.lin.reg(x=Yr, y=lgWeight, h=h, tg=tg)
@@ -88,55 +89,61 @@ lines(tg,llr$mt-1.96*sigma,col=4,lwd=1)
 
 ```
 
-After fitting a linear regression we are going to try with local polynomial regression of different degress.
+After fitting a linear regression we are going to try with local polynomial regression of different degress, using the scaled Epanechnikov as the kernel function.
 ```{r}
 par(mfrow=c(2,2))
 
 degrees <- c(0,1,2,3,4,5)
 
 for (d in degrees) {
-  lpr_visual(x=Yr, y=lgWeight, h=10, q=d, tg=c(20,40,60,80),
-           xlab="Yr", ylab="lgWeight",
-           main=paste('Degree local pol.: q = ', d, sep = ""), type.kernel="epan")
+  lpr_visual(x=Yr, y=lgWeight, q=d, tg=c(20,40,60,80), # h=10
+             xlab="Yr", ylab="lgWeight",
+             main=paste('Degree local pol.: q = ', d, sep = ""), type.kernel="rs.epan")
 }
 ```
 
-We can see that the degree that allows to approximate better the real curve is 3, therefore we are going to use this degree and variate the smooth parameter to obtain the best fit.
+We can see that the degree that allows to approximate better the curve is 3, therefore, we are going to use this degree and variate the smoothing parameter to obtain the best fit.
 
 ```{r}
+par(mfrow=c(2,2))
 degree <- 3
 hs <- c(10,13,16,20)
 for (h in hs) {
   lpr_visual(x=Yr, y=lgWeight, h=h, q=degree, tg=c(20,40,60,80),
-           xlab="Yr", ylab="lgWeight",
-           main=paste('Degree local pol.: q =', paste(degree, paste(", h = ", h))), type.kernel="epan")
+             xlab="Yr", ylab="lgWeight",
+             main=paste('Degree local pol.: q =', paste(degree, paste(", h = ", h))), 
+             type.kernel="rs.epan")
 }
 ```
 
 After tunning the smoothing parameter $h$ we see that the best fit was obtainend using $h=13$, and whith this we will build the polynomial regression
 ```{r}
+par(mfrow=c(2,2))
 h <- 13
 lpr_visual(x=Yr, y=lgWeight, h=h, q=degree, tg=c(20,40,60,80),
            xlab="Yr", ylab="lgWeight",
-           main=paste('Degree local pol.: q =', paste(degree, paste(", h = ", h))), type.kernel="epan")
-lpr <- locpolreg(x=Yr, y=lgWeight, h=h, q=degree, r=1, main=paste("r=1, q=",paste(degree, paste(", h=",h))), type.kernel="epan")
+           main=paste('Degree local pol.: q =', paste(degree, paste(", h = ", h))), type.kernel="rs.epan")
+lpr <- locpolreg(x=Yr, y=lgWeight, h=h, q=degree, r=0, type.kernel="rs.epan")
 ```
 
-Repeating the same proceure we used before, we will transform the estimated residuals and perform the regression over $z_i$
+Repeating the same proceure we used before for the local linear regression, we will transform the estimated residuals and perform the polynomial regression over $z_i$
 ```{r}
+par(mfrow=c(2,2))
 # step 2 Transform the estimated residuals z_i = log((y_i - lpr$mtgr)^2)
 z_i = log((lgWeight - lpr$mtgr)^2)
 
 # step 3 Fit a nonparametric regression to data (Yr,z_i) and 
 # call the estimated function qˆ(x).
-lpr2 <-locpolreg(x=Yr, y=z_i, h=h, q=degree, r=1, main=paste("r=1, q=",paste(degree, paste(", h=",h))), type.kernel="epan")
+lpr2 <-locpolreg(x=Yr, y=z_i, h=h, q=degree, r=0, type.kernel="rs.epan", 
+                 main=paste("r=0, q=",paste(degree, paste(", h=",h))))
 ```
 
 Finally, we estimate the variance $\sigma^2$
 ```{r}
+par(mfrow=c(2,2))
 # step 4 Estimate sigma_2(x)
 sigma_2 =  exp(lpr2$mtgr)
-plot(Yr,((lgWeight - lpr2$mtgr)^2)) # residual square against x_i
+plot(Yr,((lgWeight - lpr$mtgr)^2)) # residual square against x_i
 lines(Yr, sigma_2, col=3, lwd=3)
 ```
 
@@ -144,7 +151,9 @@ Function $\hat{m}(x)$ and the superimposed bands $\hat{m}(x)\pm 1.96\hat{\sigma}
 ```{r}
 sigma = sqrt(sigma_2)
 plot(Yr,lgWeight)
-lines(Yr,lpr2$mtgr,col=3,lwd=3) # mt from step 1
-lines(Yr,lpr2$mtgr+1.96*sigma,col=4,lwd=1)
-lines(Yr,lpr2$mtgr-1.96*sigma,col=4,lwd=1)
+lines(Yr,lpr$mtgr,col=3,lwd=3)
+lines(Yr,lpr$mtgr+1.96*sigma,col=4,lwd=1)
+lines(Yr,lpr$mtgr-1.96*sigma,col=4,lwd=1)
 ```
+
+After performing performing a local linear and polynomial regressions we can see that the results are comparable, the polynomial showing a smoother curve. Hence, we can say that for this escenario of the aircraft data both approaches are satifactory.
