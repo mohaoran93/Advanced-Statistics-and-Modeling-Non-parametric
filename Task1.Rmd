@@ -12,7 +12,9 @@ source("locpolreg.R")
 source("loc_lin_reg.R")
 ```
 
-In this excercise we want to estimate the function that represents the conditional variance $\sigma^2$ of the variable lgWeigth from the aircraft dataset given that the explanatory variable (Yr) is equal to a value x, and we will use nonparametric methods to do that.
+Having the heteroscedastic regression model $$Y = m(x) + \sigma(x)\varepsilon = m(x) + \epsilon,$$, where $E(\varepsilon) = 0, V(\varepsilon) = 1$
+
+we want to estimate the function that represents the conditional variance $\sigma^2$ of the variable lgWeigth (log(Weight)) from the aircraft dataset, given that the explanatory variable (Yr) is equal to a value x. We will use nonparametric methods to do that. Below is the plot the response variable vs the explanatory variable.
 
 ```{r}
 data(aircraft)
@@ -21,53 +23,70 @@ lgWeight <-log(Weight)
 plot(Yr,lgWeight)
 ```
 
+Initially, we are going to fit a local linear regression model to obtain an estimation $\hat{m}(x)$ of every point $x$. The general idea is to build a grid of intervals ($t_i$) centered around each point $x$ and estimate a local linear regression in each interval. Doing this, we are going to try multiple sizes for the intervals and several values for the smoothing parameter $h$, which controls weight concentration around each point $x$.
 
-Initially, we are going to fit a local linear regression model to obtain an estimation $\hat{m}(x)$ of every point $x$ (Yr vs lgWeight). The general idea is to build a grid of intervals ($t_i$) centered around each point $x$ and estimate a local linear regression in each interval. We are going to try multiple sizes of the intervals and several values for the smoothing parameter $h$, which controls weight concentration around the points $x$.
+To make the regression function smooth weights are assigned to each pair $(t_i,y_i)$ using a kernel function, which, in this case, is the Normal density function centered at 0, with $h$ as standard deviation.
 
-To make the regression function smooth weights are assigned to each pair $(t_i,y_1)$ using a kernel function, which, in this case, is the Normal density function centered at 0, with $h$ as standard deviation.
+The result is shown below, where we can see an smooth function (in red) of the estimates.
 ```{r}
-# step 1 Fit a nonparametric regression to data (xi,yi) and save the estimated values mˆ (xi).
-op <- par(mfrow=c(1,1))
-llr <- loc.lin.reg(x=Yr,y=lgWeight, tg=Yr)
-plot(Yr,lgWeight)
-lines(Yr, llr$mt, col=2, lwd=2)
+# step 1 Fit a nonparametric regression to data (xi,yi) and save 
+#   the estimated values mˆ (xi).
+par(mfrow=c(2,2))
+hs <- c(1,1.4,4,8.4,10)
+ts <- c(30,51,70)
+for (t in ts) {
+  for (h in hs) {
+    tg = seq(min(Yr), max(Yr), length=t)
+    llr <- loc.lin.reg(x=Yr, y=lgWeight, h=h, tg=tg)
+    plot(Yr,lgWeight, main = paste("h = ", paste(h, paste(", t = ", t, sep = ""), sep = "")))
+    lines(tg, llr$mt, col=2, lwd=2)
+  }
+}
 # TODO is this regression good enough?
 ```
+Changing the smooth parameter and the size of the interval we can see that $h$ has more impact than sizds of interval, as $h$ increases the function curve becomes smoother. We will choose the combination $h = 4$ and $t = 70$
 
-Now we are going to apply logarithm over the square residuals $(y_i - \hat{m}(x_i))^2$, which is represents to the variance (the square deviation) of the model.
+```{r}
+h <- 4
+tg <- seq(min(Yr), max(Yr), length=70)
+```
+
+Now we are going to transform the estimated residuals applying logarithm to the square of it $\hat\epsilon_i = (y_i - \hat{m}(x_i))^2$, which represents the variance (the square deviation) of the model. $$z_i = log\epsilon_i^2 = log((y_i - \hat{m}(x_i))^2)$$
 ```{r}
 # step 2 Transform the estimated residuals hat.e? = y_i - llr$mt
 z_i = log((lgWeight - llr$mt)^2)
 ```
 
-Now we are to perform a regression over $(x_i,z_i)$ to estimate the (logarithm of the) variance.
+Then we perform a nonparametric regression over $(x_i,z_i)$ to obtain the estimation of the (logarithm of the) variance $log\sigma^2(x)$.
 
 ```{r}
-# step 3 Fit a nonparametric regression to data (Yr,z_i) and call the estimated function qˆ(x).
+# step 3 Fit a nonparametric regression to data (Yr,z_i) and 
+# call the estimated function qˆ(x).
+llr2 <-loc.lin.reg(x=Yr, y=z_i, h=h, tg=tg)
 plot(Yr,z_i)
-llr2 <-loc.lin.reg(x=Yr,y=z_i, tg=Yr)
-lines(Yr, llr2$mt, col=2, lwd=2)
+lines(tg, llr2$mt, col=2, lwd=2)
 ```
 
-Finally, we can obtain the conditional variance applying exponential
+Finally, we can obtain the conditional variance applying exponential to the estimation obtained before
 
 ```{r}
 # step 4 Estimate sigma_2(x)
 sigma_2 =  exp(llr2$mt)
 ```
 
-Draw the residuals against $x_i$ and superimpose the estimated function $\hat{\sigma}^2(x)$
+Plotting the residuals against $x_i$ we superimposed the estimated function $\hat{\sigma}^2(x)$
 ```{r}
 plot(Yr,((lgWeight - llr$mt)^2)) # residual square against x_i
-lines(Yr, sigma_2, col=3, lwd=3)
+lines(tg, sigma_2, col=3, lwd=3)
 
 ```
-Draw the function $\hat{m}(x)$ and superimpose the bands $\hat{m}(x) ± 1.96\hat{\sigma}(x)$
+
+Here we present the draw of the function $\hat{m}(x)$ and the superimposed bands $\hat{m}(x) ± 1.96\hat{\sigma}(x)$
 ```{r}
 sigma = sqrt(sigma_2)
 plot(Yr,lgWeight)
-lines(Yr,llr$mt,col=3,lwd=3) # mt from step 1
-lines(Yr,llr$mt+1.96*sigma,col=4,lwd=1)
-lines(Yr,llr$mt-1.96*sigma,col=4,lwd=1)
+lines(tg,llr$mt,col=3,lwd=3) # mt from step 1
+lines(tg,llr$mt+1.96*sigma,col=4,lwd=1)
+lines(tg,llr$mt-1.96*sigma,col=4,lwd=1)
 
 ```
