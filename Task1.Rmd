@@ -23,32 +23,29 @@ lgWeight <-log(Weight)
 plot(Yr,lgWeight)
 ```
 
-Initially, we are going to fit a local linear regression model to obtain an estimation $\hat{m}(x)$ of every point $x$. The general idea is to build a grid of intervals ($t_i$) centered around each point $x$ and estimate a local linear regression in each interval. Doing this, we are going to try multiple sizes for the intervals and several values for the smoothing parameter $h$, which controls weight concentration around each point $x$.
+Initially, we are going to fit a local linear regression model to obtain an estimation $\hat{m}(x)$ of every point $x$. The general idea is to build a grid of intervals ($t_i$) centered around each point $x$ and estimate a local linear regression in each interval. Doing this, we are going to try multiple values for the smoothing parameter $h$, which controls weight concentration around each point $x$.
 
 To make the regression function smooth weights are assigned to each pair $(t_i,y_i)$ using a kernel function, which, in this case, is the Normal density function centered at 0, with $h$ as standard deviation.
 
 The result is shown below, where we can see an smooth function (in red) of the estimates.
+
 ```{r}
 # step 1 Fit a nonparametric regression to data (xi,yi) and save 
 #   the estimated values mˆ (xi).
 par(mfrow=c(3,5))
 hs <- c(1,1.4,4,8.4,10)
-ts <- c(30,51,70)
-for (t in ts) {
-  for (h in hs) {
-    tg = seq(min(Yr), max(Yr), length=t)
-    llr <- loc.lin.reg(x=Yr, y=lgWeight, h=h, tg=tg)
-    plot(Yr,lgWeight, main = paste("h = ", paste(h, paste(", t = ", t, sep = ""), sep = "")))
-    lines(tg, llr$mt, col=2, lwd=2)
-  }
+tg = seq(min(Yr), max(Yr), length=51)
+for (h in hs) {
+  llr <- loc.lin.reg(x=Yr, y=lgWeight, h=h, tg=tg)
+  plot(Yr,lgWeight, main = paste("h = ", h, sep = ""))
+  lines(tg, llr$mt, col=2, lwd=2)
 }
 ```
-Changing the smooth parameter and the size of the interval we can see that $h$ has more impact than sizds of interval, as $h$ increases the function curve becomes smoother. We will choose the combination $h = 4$ and $t = 70$
+Changing the smooth parameter we can see that as $h$ increases the function curve becomes smoother. We will choose the combination $h = 4$
 # TODO I do not think that t really influences the estimator.
 
 ```{r}
 h <- 4
-tg <- seq(min(Yr), max(Yr), length=709)
 llr <- loc.lin.reg(x=Yr, y=lgWeight, h=h, tg=tg)
 # TODO with any other length except 709, it will cause problem on claculating log((lgWeight - llr$mt)^2) : longer object length is not a multiple of shorter object length
 ```
@@ -83,7 +80,7 @@ lines(tg, sigma_2, col=3, lwd=3)
 
 ```
 
-Here we present the draw of the function $\hat{m}(x)$ and the superimposed bands $\hat{m}(x) ± 1.96\hat{\sigma}(x)$
+Here we present the draw of the function $\hat{m}(x)$ and the superimposed bands $\hat{m}(x)\pm 1.96\hat{\sigma}(x)$
 ```{r}
 sigma = sqrt(sigma_2)
 plot(Yr,lgWeight)
@@ -91,4 +88,17 @@ lines(tg,llr$mt,col=3,lwd=3) # mt from step 1
 lines(tg,llr$mt+1.96*sigma,col=4,lwd=1)
 lines(tg,llr$mt-1.96*sigma,col=4,lwd=1)
 
+```
+
+After fitting a linear regression we are going to try with local polynomial regression of different degress.
+```{r}
+par(mfrow=c(2,2))
+
+degrees <- c(0,1,2,3,4,5)
+
+for (d in degrees) {
+  lpr_visual(x=Yr, y=lgWeight, h=10, q=d, tg=c(20,40,60),
+           xlab="Yr", ylab="lgWeight",
+           main=paste('Degree local pol.: q = ', d, sep = ""),type.kernel="epan")
+}
 ```
