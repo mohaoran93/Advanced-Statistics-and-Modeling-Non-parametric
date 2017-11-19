@@ -31,7 +31,7 @@ The result is shown below, where we can see an smooth function (in red) of the e
 ```{r}
 # step 1 Fit a nonparametric regression to data (xi,yi) and save 
 #   the estimated values mˆ (xi).
-par(mfrow=c(2,2))
+par(mfrow=c(3,5))
 hs <- c(1,1.4,4,8.4,10)
 ts <- c(30,51,70)
 for (t in ts) {
@@ -42,18 +42,20 @@ for (t in ts) {
     lines(tg, llr$mt, col=2, lwd=2)
   }
 }
-# TODO is this regression good enough?
 ```
 Changing the smooth parameter and the size of the interval we can see that $h$ has more impact than sizds of interval, as $h$ increases the function curve becomes smoother. We will choose the combination $h = 4$ and $t = 70$
+# TODO I do not think that t really influences the estimator.
 
 ```{r}
 h <- 4
-tg <- seq(min(Yr), max(Yr), length=70)
+tg <- seq(min(Yr), max(Yr), length=709)
+llr <- loc.lin.reg(x=Yr, y=lgWeight, h=h, tg=tg)
+# TODO with any other length except 709, it will cause problem on claculating log((lgWeight - llr$mt)^2) : longer object length is not a multiple of shorter object length
 ```
 
 Now we are going to transform the estimated residuals applying logarithm to the square of it $\hat\epsilon_i = (y_i - \hat{m}(x_i))^2$, which represents the variance (the square deviation) of the model. $$z_i = log\epsilon_i^2 = log((y_i - \hat{m}(x_i))^2)$$
 ```{r}
-# step 2 Transform the estimated residuals hat.e? = y_i - llr$mt
+# step 2 Transform the estimated residuals z_i = log((y_i - llr$mt)^2)
 z_i = log((lgWeight - llr$mt)^2)
 ```
 
