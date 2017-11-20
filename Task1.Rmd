@@ -28,7 +28,7 @@ Initially, we are going to fit a local linear regression model to obtain an esti
 
 To make the regression function smooth weights are assigned to each pair $(t_i,y_i)$ using a kernel function, which, in this case, is the Normal density function centered at 0, with $h$ as standard deviation.
 
-The result is shown below, where we can see an smooth function (in red) of the estimates.
+The result is shown below, where we can see a smooth function (in red) of the estimates.
 
 ```{r}
 # step 1 Fit a nonparametric regression to data (xi,yi) and save 
@@ -89,14 +89,14 @@ lines(tg,llr$mt-1.96*sigma,col=4,lwd=1)
 
 ```
 
-After fitting a linear regression we are going to try with local polynomial regression of different degress, using Epanechnikov as the kernel function.
+After fitting a linear regression we are going to try with local polynomial regression of different degrees, using Epanechnikov as the kernel function.
 ```{r}
 par(mfrow=c(2,2))
 
 degrees <- c(0,1,2,3,4,5)
 
 for (d in degrees) {
-  lpr_visual(x=Yr, y=lgWeight, q=d, tg=c(20,40,60,80), # h=10
+  lpr_visual(x=Yr, y=lgWeight,h=10, q=d, tg=c(20,40,60,80), # 
              xlab="Yr", ylab="lgWeight",
              main=paste('Degree local pol.: q = ', d, sep = ""), type.kernel="epan")
 }
@@ -116,7 +116,7 @@ for (h in hs) {
 }
 ```
 
-After tunning the smoothing parameter $h$ we see that the best fit was obtainend using $h=13$, and whith this we will build the polynomial regression
+After tunning the smoothing parameter $h$ we see that the best fit was obtained using $h=13$, and we will build the polynomial regression with this
 ```{r}
 par(mfrow=c(2,2))
 h <- 13
@@ -126,9 +126,9 @@ lpr_visual(x=Yr, y=lgWeight, h=h, q=degree, tg=c(20,40,60,80),
 lpr <- locpolreg(x=Yr, y=lgWeight, h=h, q=degree, r=0, type.kernel="epan")
 ```
 
-Repeating the same proceure we used before for the local linear regression, we will transform the estimated residuals and perform the polynomial regression over $z_i$
+Repeating the same procedure we used before for the local linear regression, we will transform the estimated residuals and perform the polynomial regression over $z_i$
 ```{r}
-par(mfrow=c(2,2))
+par(mfrow=c(1,1))
 # step 2 Transform the estimated residuals z_i = log((y_i - lpr$mtgr)^2)
 z_i = log((lgWeight - lpr$mtgr)^2)
 
@@ -140,7 +140,7 @@ lpr2 <-locpolreg(x=Yr, y=z_i, h=h, q=degree, r=0, type.kernel="epan",
 
 Finally, we estimate the variance $\sigma^2$
 ```{r}
-par(mfrow=c(2,2))
+par(mfrow=c(1,1))
 # step 4 Estimate sigma_2(x)
 sigma_2 =  exp(lpr2$mtgr)
 plot(Yr,((lgWeight - lpr$mtgr)^2)) # residual square against x_i
@@ -156,4 +156,4 @@ lines(Yr,lpr$mtgr+1.96*sigma,col=4,lwd=1)
 lines(Yr,lpr$mtgr-1.96*sigma,col=4,lwd=1)
 ```
 
-After performing performing a local linear and polynomial regressions we can see that the results are comparable, the polynomial showing a smoother curve. Hence, we can say that for this escenario of the aircraft data both approaches are satifactory.
+After performing a local linear and polynomial regressions we can see that the results are comparable, the polynomial showing a smoother curve. Hence, we can say that for this scenario of the aircraft data both approaches are satisfactory.
