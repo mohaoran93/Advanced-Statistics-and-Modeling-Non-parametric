@@ -89,7 +89,7 @@ lines(tg,llr$mt-1.96*sigma,col=4,lwd=1)
 
 ```
 
-After fitting a linear regression we are going to try with local polynomial regression of different degress, using the scaled Epanechnikov as the kernel function.
+After fitting a linear regression we are going to try with local polynomial regression of different degress, using Epanechnikov as the kernel function.
 ```{r}
 par(mfrow=c(2,2))
 
@@ -98,7 +98,7 @@ degrees <- c(0,1,2,3,4,5)
 for (d in degrees) {
   lpr_visual(x=Yr, y=lgWeight, q=d, tg=c(20,40,60,80), # h=10
              xlab="Yr", ylab="lgWeight",
-             main=paste('Degree local pol.: q = ', d, sep = ""), type.kernel="rs.epan")
+             main=paste('Degree local pol.: q = ', d, sep = ""), type.kernel="epan")
 }
 ```
 
@@ -112,7 +112,7 @@ for (h in hs) {
   lpr_visual(x=Yr, y=lgWeight, h=h, q=degree, tg=c(20,40,60,80),
              xlab="Yr", ylab="lgWeight",
              main=paste('Degree local pol.: q =', paste(degree, paste(", h = ", h))), 
-             type.kernel="rs.epan")
+             type.kernel="epan")
 }
 ```
 
@@ -122,8 +122,8 @@ par(mfrow=c(2,2))
 h <- 13
 lpr_visual(x=Yr, y=lgWeight, h=h, q=degree, tg=c(20,40,60,80),
            xlab="Yr", ylab="lgWeight",
-           main=paste('Degree local pol.: q =', paste(degree, paste(", h = ", h))), type.kernel="rs.epan")
-lpr <- locpolreg(x=Yr, y=lgWeight, h=h, q=degree, r=0, type.kernel="rs.epan")
+           main=paste('Degree local pol.: q =', paste(degree, paste(", h = ", h))), type.kernel="epan")
+lpr <- locpolreg(x=Yr, y=lgWeight, h=h, q=degree, r=0, type.kernel="epan")
 ```
 
 Repeating the same proceure we used before for the local linear regression, we will transform the estimated residuals and perform the polynomial regression over $z_i$
@@ -134,7 +134,7 @@ z_i = log((lgWeight - lpr$mtgr)^2)
 
 # step 3 Fit a nonparametric regression to data (Yr,z_i) and 
 # call the estimated function qˆ(x).
-lpr2 <-locpolreg(x=Yr, y=z_i, h=h, q=degree, r=0, type.kernel="rs.epan", 
+lpr2 <-locpolreg(x=Yr, y=z_i, h=h, q=degree, r=0, type.kernel="epan", 
                  main=paste("r=0, q=",paste(degree, paste(", h=",h))))
 ```
 
