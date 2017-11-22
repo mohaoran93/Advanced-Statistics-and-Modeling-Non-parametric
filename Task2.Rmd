@@ -27,8 +27,6 @@ calculate_residual_variance <- function(X,Y) {
   
   summation <- 0
   n <- length(Y)
-  y.hat <- c()
-  residual.hat <- c()
   
   for (i in 2:(n-1)) {
     xi <- XY[i, 'X']
@@ -42,20 +40,20 @@ calculate_residual_variance <- function(X,Y) {
     repetitions <- rep[names(rep)==xi]
     
     if (repetitions >= 3) {
-      xui <- min(XY[XY$X > xi,])
-      xli <- max(XY[XY$X < xi,])
+      xu_i <- min(XY[XY$X > xi,])
+      xl_i <- max(XY[XY$X < xi,])
     } else {
-      xui <- x.following
-      xli <- x.previous
+      xu_i <- x.following
+      xl_i <- x.previous
     }
     
-    ai <- (x.following - xi)/(xui - xli)
-    bi <- (xi - x.previous)/(xui - xli)
+    a_i <- (x.following - xi)/(xu_i - xl_i)
+    b_i <- (xi - x.previous)/(xu_i - xl_i)
     
-    y.hat[i] <- ai*y.previous + bi*y.following
+    y.hat_i <- a_i*y.previous + b_i*y.following
     
-    residual.hat[i] <- y.hat[i] - XY[i, 'Y']
-    summation <- summation + (residual.hat[i]^2/(ai^2 + bi^2 + 1))
+    residual.hat_i <- y.hat_i - XY[i, 'Y']
+    summation <- summation + (residual.hat_i^2/(a_i^2 + b_i^2 + 1))
   }
   
   residual.variance <- summation/(n - 2)
