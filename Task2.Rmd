@@ -8,4 +8,65 @@ output: pdf_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+library(sm)
+```
+
+```{r}
+load('boston.Rdata')
+```
+
+The second approach is the method proposed by Gasser, Stroka and Jennen-Steinmetz in 1986, which consists in linear interpolation of every point $xi$ with the previous and following observation, when they are ordered based n the value of $xi$ in an ascending order.
+
+The linear interpolation for $xi$ is defined by:
+$$\hat{y}_i = \frac{x_{i+1}-x_i}{x_{i+1}-x_{i-1}}y_i+\frac{x_{i}-x_{i-1}}{x_{i+1}-x_{i-1}}y_{i+1}=a_iy_{i-1}+b{y_{i+1}}$$
+
+```{r}
+calculate_residual_variance <- function(X,Y) {
+  XY <- data.frame(X,Y)
+  XY <- XY[order(XY$X),]
+  
+  summation <- 0
+  n <- length(Y)
+  y.hat <- c()
+  residual.hat <- c()
+  
+  for (i in 2:(n-1)) {
+    xi <- XY[i, 'X']
+    
+    x.previous = XY[i-1,'X'] # x_i-1
+    x.following = XY[i+1,'X'] # x_i+1
+    y.previous = XY[i-1,'Y'] # y_i-1
+    y.following = XY[i+1,'Y'] # y_i+1
+    
+    rep <- table(X)
+    repetitions <- rep[names(rep)==xi]
+    
+    if (repetitions >= 3) {
+      xui <- min(XY[XY$X > xi,])
+      xli <- max(XY[XY$X < xi,])
+    } else {
+      xui <- x.following
+      xli <- x.previous
+    }
+    
+    ai <- (x.following - xi)/(xui - xli)
+    bi <- (xi - x.previous)/(xui - xli)
+    
+    y.hat[i] <- ai*y.previous + bi*y.following
+    
+    residual.hat[i] <- y.hat[i] - XY[i, 'Y']
+    summation <- summation + (residual.hat[i]^2/(ai^2 + bi^2 + 1))
+  }
+  
+  residual.variance <- summation/(n - 2)
+  return(residual.variance)
+}
+
+X <- boston.c$LSTAT
+Y <- boston.c$RM
+(calculate_residual_variance(X,Y))
+
+loess.fit <- loess(RM~LSTAT, data = boston.c)
+(residual.variance.loess <- var(loess.fit$residuals))
+
 ```
