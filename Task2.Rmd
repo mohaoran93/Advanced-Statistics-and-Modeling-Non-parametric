@@ -1,0 +1,11 @@
+---
+title: "Advanced Statistical Modeling"
+subtitle: "Non-parametric models - Alternative estimations of conditional variance"
+author: "Haoran Mo, Alexandra Yamaui"
+date: "November 22, 2017"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
