@@ -26,9 +26,15 @@ calculate_residual_variance <- function(X,Y) {
   XY <- data.frame(X,Y)
   XY <- XY[order(XY$X),]
   rownames(XY) <- 1:nrow(XY)
-  
-  summation <- 0
   n <- length(Y)
+  
+  # Rice
+  t2 = XY[-c(length(X)),"Y"]
+  t1 = XY[-c(1),"Y"]
+  rice.sigma_2 <- (sum((t2-t1)^2))/(2*(n-1))
+  
+  # Gasser, Sroka, and Jennen-Steinmetz
+  summation <- 0
   
   for (i in 2:(n-1)) {
     xi <- XY[i, 'X']
@@ -38,19 +44,13 @@ calculate_residual_variance <- function(X,Y) {
     y.previous = XY[i-1,'Y'] # y_i-1
     y.following = XY[i+1,'Y'] # y_i+1
     
-    rep <- table(X)
-    repetitions <- rep[names(rep)==xi]
-    
-    if (repetitions >= 3) {
-      xu_i <- min(XY[XY$X > xi,]$X)
-      xl_i <- max(XY[XY$X < xi,]$X)
-    } else {
-      xu_i <- x.following
-      xl_i <- x.previous
+    if (x.previous == x.following) {
+      x.following <- min(XY[XY$X > xi,]$X)
+      x.previous <- max(XY[XY$X < xi,]$X)
     }
     
-    a_i <- (x.following - xi)/(xu_i - xl_i)
-    b_i <- (xi - x.previous)/(xu_i - xl_i)
+    a_i <- (x.following - xi)/(x.following - x.previous)
+    b_i <- (xi - x.previous)/(x.following - x.previous)
     
     y.hat_i <- a_i*y.previous + b_i*y.following
     
@@ -58,8 +58,8 @@ calculate_residual_variance <- function(X,Y) {
     summation <- summation + (residual.hat_i^2/(a_i^2 + b_i^2 + 1))
   }
   
-  residual.variance <- summation/(n - 2)
-  return(residual.variance)
+  gasser.sigma2 <- summation/(n - 2)
+  return(list(rice.sigma_2, gasser.sigma2))  
 }
 
 X <- boston.c$LSTAT
