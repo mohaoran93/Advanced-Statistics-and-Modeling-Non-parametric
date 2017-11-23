@@ -19,11 +19,13 @@ The second approach is the method proposed by Gasser, Stroka and Jennen-Steinmet
 
 The linear interpolation for $xi$ is defined by:
 $$\hat{y}_i = \frac{x_{i+1}-x_i}{x_{i+1}-x_{i-1}}y_i+\frac{x_{i}-x_{i-1}}{x_{i+1}-x_{i-1}}y_{i+1}=a_iy_{i-1}+b{y_{i+1}}$$
+and the (unbiased) estimator of $\hat\sigma^2 = \frac{1}{n-2}\sum_{i=2}^{n-1}\frac{1}{a_i^2+b_i^2+1}\hat\varepsilon_i^2$
 
 ```{r}
 calculate_residual_variance <- function(X,Y) {
   XY <- data.frame(X,Y)
   XY <- XY[order(XY$X),]
+  rownames(XY) <- 1:nrow(XY)
   
   summation <- 0
   n <- length(Y)
@@ -40,8 +42,8 @@ calculate_residual_variance <- function(X,Y) {
     repetitions <- rep[names(rep)==xi]
     
     if (repetitions >= 3) {
-      xu_i <- min(XY[XY$X > xi,])
-      xl_i <- max(XY[XY$X < xi,])
+      xu_i <- min(XY[XY$X > xi,]$X)
+      xl_i <- max(XY[XY$X < xi,]$X)
     } else {
       xu_i <- x.following
       xl_i <- x.previous
