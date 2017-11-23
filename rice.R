@@ -29,6 +29,9 @@ calculate_residual_variance <- function(X,Y) {
     y.previous = XY[i-1,'Y'] # y_i-1
     y.following = XY[i+1,'Y'] # y_i+1
     
+    #rep <- table(X)
+    #repetitions <- rep[names(rep)==xi]
+    
     if (x.previous == x.following) {
       x.following <- min(XY[XY$X > xi,]$X)
       x.previous <- max(XY[XY$X < xi,]$X)
@@ -37,15 +40,14 @@ calculate_residual_variance <- function(X,Y) {
     a_i <- (x.following - xi)/(x.following - x.previous)
     b_i <- (xi - x.previous)/(x.following - x.previous)
     
-    y.hat_i <- a_i*y.previous + b_i*y.following
+    y.hat[i] <- ai*y.previous + bi*y.following
     
-    residual.hat_i <- y.hat_i - XY[i, 'Y']
-    summation <- summation + (residual.hat_i^2/(a_i^2 + b_i^2 + 1))
+    residual.hat[i] <- y.hat[i] - XY[i, 'Y']
+    summation <- summation + (residual.hat[i]^2/(ai^2 + bi^2 + 1))
   }
   
   gasser.sigma2 <- summation/(n - 2)
-  return(list(rice.sigma_2, gasser.sigma2))  
+  return(list(rice.sigma_2, gasser.sigma2))
 }
-
 #bos.fit.loess <- loess(ROOM ~ LSTAT, boston.c)
 #bos.fit.sm <- sm.regression(LSTAT,ROOM)
