@@ -72,14 +72,16 @@ calculate_residual_variance <- function(X,Y) {
 
 X <- boston.c$LSTAT
 Y <- boston.c$RM
-(calculate_residual_variance(X,Y))
-
+(result <- calculate_residual_variance(X,Y))
 ```
 
 Comparing the estimated values with another R packages methods we see that the values are similar:
 ```{r}
 loess.fit <- loess(RM~LSTAT, data = boston.c)
-(residual.variance.loess <- var(loess.fit$residuals))
-
+residual.variance.loess <- var(loess.fit$residuals)
+print(sqrt(residual.variance.loess))
 sm.fit <- sm.regression(boston.c$LSTAT,boston.c$RM)
+print(sm.fit$sigma)
+print(sqrt(unlist(result[1])))
+print(sqrt(unlist(result[2])))
 ```

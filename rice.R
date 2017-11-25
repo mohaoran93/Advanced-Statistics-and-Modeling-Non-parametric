@@ -37,8 +37,13 @@ calculate_residual_variance <- function(X,Y) {
       x.previous <- max(XY[XY$X < xi,]$X)
     }
     
+<<<<<<< Updated upstream
     a_i <- (x.following - xi)/(x.following - x.previous)
     b_i <- (xi - x.previous)/(x.following - x.previous)
+=======
+    ai <- (xui - xi)/(xui - xli)
+    bi <- (xi - xli)/(xui - xli)
+>>>>>>> Stashed changes
     
     y.hat[i] <- ai*y.previous + bi*y.following
     
