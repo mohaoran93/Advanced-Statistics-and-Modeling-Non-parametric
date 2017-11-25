@@ -11,15 +11,23 @@ knitr::opts_chunk$set(echo = TRUE)
 library(sm)
 ```
 
-```{r}
+```{r include=FALSE}
 load('boston.Rdata')
 ```
 
-The second approach is the method proposed by Gasser, Stroka and Jennen-Steinmetz in 1986, which consists in linear interpolation of every point $xi$ with the previous and following observation, when they are ordered based n the value of $xi$ in an ascending order.
+The second approach is the method proposed by Gasser, Stroka and Jennen-Steinmetz in 1986, which consists in linear interpolation of every point $(x_i,y_i)$ with the previous and following observations $(x_{i-1},y_{i-1})$ and $(x_{i+1},y_{i+1})$, respectively. The observations are sorted based on the value of $x_i$ in ascending order. The idea behind this approach is that $\hat{y_i}$ $(\hat{m_i})$ is approximetly equal to $(x_{i-1},m(x_{x-i}))$ and $(x_{x+1},m(x_{x+i}))$ if the function $m$ is smooth and $x_i$, $x_{i-1}$ and $x_{i+1}$ are close enough.
 
-The linear interpolation for $xi$ is defined by:
+The linear interpolation for $x_i$ is defined by:
 $$\hat{y}_i = \frac{x_{i+1}-x_i}{x_{i+1}-x_{i-1}}y_i+\frac{x_{i}-x_{i-1}}{x_{i+1}-x_{i-1}}y_{i+1}=a_iy_{i-1}+b{y_{i+1}}$$
-and the (unbiased) estimator of $\hat\sigma^2 = \frac{1}{n-2}\sum_{i=2}^{n-1}\frac{1}{a_i^2+b_i^2+1}\hat\varepsilon_i^2$
+
+The estimation of the residuals would be the difference between the estimated value $\hat{y_i}$ from the interpolation and the real value $y_i$ with an expected value $E(\tilde{\varepsilon})\approx0$:
+$$\tilde{\varepsilon}=\hat{y_i}-y_i=a_iy_{i-1}+b{y_{i+1}}-y_i$$
+The residuals can be seen as the deviation from the true value, therefore:
+
+$$E(\tilde{\varepsilon}^2)\approx V(\tilde{\varepsilon_i}) = (a_i^2+b_i^2+1)  \sigma^2$$
+and the residual variance $\hat\sigma^2$ can be approximated as: $$\hat{\sigma}^2=\frac{1}{n-2}\sum_{i=2}^{n-1}\frac{1}{a_i^2+b_i^2+1}\tilde\varepsilon_i^2$$
+
+Below we present the implementation of a function that calculates the estimation of the residual variance through both approaches. For the second method, in the cases when the previous ($x_{i-1}$) and following ($x_{i+1}$) observations are equal, the maximum of lower observations and the minimum of higher observations are taken instead.
 
 ```{r}
 calculate_residual_variance <- function(X,Y) {
@@ -66,7 +74,12 @@ X <- boston.c$LSTAT
 Y <- boston.c$RM
 (calculate_residual_variance(X,Y))
 
+```
+
+Comparing the estimated values with another R packages methods we see that the values are similar:
+```{r}
 loess.fit <- loess(RM~LSTAT, data = boston.c)
 (residual.variance.loess <- var(loess.fit$residuals))
 
+sm.fit <- sm.regression(boston.c$LSTAT,boston.c$RM)
 ```
