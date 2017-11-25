@@ -14,6 +14,9 @@ library(sm)
 ```{r include=FALSE}
 load('boston.Rdata')
 ```
+The first approach is Rice. We would like to make it more clear: 
+The variance of a random variable tells us something about the spread of the possible values of the variable. For a discrete random variable $y_i - y_{i-1}$, the variance of $y_i - y_{i-1}$ is written as Var($y_i - y_{i-1}$), and Var($y_i - y_{i-1}$) = $E[ ((y_i - y_{i-1}) - m)^2 ]$ where m is $E(y_i - y_{i-1})$, it can be written as $Var(y_i - y_{i-1}) = E[ (y_i - y_{i-1})^2 ] - m^2$. After further more steps as shown in the chapter 2.4, we can obtain the function $\hat{\sigma}^2 = \frac{1}{2(n-1)}\sum_{i=2}^{n}(y_i - y_{i-1})^2$
+
 
 The second approach is the method proposed by Gasser, Stroka and Jennen-Steinmetz in 1986, which consists in linear interpolation of every point $(x_i,y_i)$ with the previous and following observations $(x_{i-1},y_{i-1})$ and $(x_{i+1},y_{i+1})$, respectively. The observations are sorted based on the value of $x_i$ in ascending order. The idea behind this approach is that $\hat{y_i}$ $(\hat{m_i})$ is approximetly equal to $(x_{i-1},m(x_{x-i}))$ and $(x_{x+1},m(x_{x+i}))$ if the function $m$ is smooth and $x_i$, $x_{i-1}$ and $x_{i+1}$ are close enough.
 
@@ -76,6 +79,10 @@ Y <- boston.c$RM
 ```
 
 Comparing the estimated values with another R packages methods we see that the values are similar:
+loess: 0.50088
+sm: 0.5097599
+approach 1: 0.5315709
+approach 2: 0.5174054
 ```{r}
 loess.fit <- loess(RM~LSTAT, data = boston.c)
 residual.variance.loess <- var(loess.fit$residuals)
