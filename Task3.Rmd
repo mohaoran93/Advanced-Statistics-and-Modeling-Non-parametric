@@ -1,0 +1,47 @@
+---
+title: "Advanced Statistical Modeling"
+subtitle: "Non-parametric models - Iteratively Re-Weighted Least Squares"
+author: "Haoran Mo, Alexandra Yamaui"
+date: "November 22, 2017"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+In this task we are going to implement the Iteratively Re-Weighted Least Squares algorithm (IRWLS), which is the most frequently used method to solve the maximization problem of the log-likelihood function. This function is at the same time used to estimate the coefficients of the Logistic Regression model.
+
+We will used zero as the initial value of the coefficients $\beta_0$ (beta_0) and $\beta_1$ (beta_1) and we will build a new response variable $z$, which is a linear combination of the points $x$. The formula is presented below
+
+$$z_i=\beta_0+\beta_1 x_i+\frac{y_i-p_i}{p_i(1-p_i)},\ i=1,...,n$$
+where $y_i$ is the original response variable and $p_i$ is defined as below, which comes from the logistic function of conditional distribution of the response variable $y$:
+
+$$p_i=\frac{e^{\beta_0+\beta_1 x_i}}{1+e^{\beta_0+\beta_1 x_i}}$$
+
+```{r}
+x = as.matrix(mtcars$wt)
+y = as.matrix(mtcars$mpg)
+n <- length(x)
+
+beta_0 <- 0
+beta_1 <- 0
+s <- 0
+p <- c()
+v <- c()
+z <- c()
+
+while (s < 11) {
+  for (i in 1:n) {
+    p[i] <- exp(beta_0 + beta_1*x[i])/(1 + exp(beta_0 + beta_1*x[i]))
+    z[i] <- beta_0 + beta_1*x[i] + ((y[i]-p[i])/p[i]*(1-p[i]))
+    v[i] <- p[i]*(1-p[i])
+  }
+  
+  lr <- lm(z ~ x, weights = v)
+  
+  beta_0 <- lr$coefficients[1]
+  beta_1 <- lr$coefficients[2]
+  s <- s + 1
+}
+```
