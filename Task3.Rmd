@@ -32,8 +32,10 @@ s <- 0
 p <- c()
 v <- c()
 z <- c()
+convergence = 1
+#convergence != TRUE
 
-while (s < 11) {
+while (convergence > 0.0001) {  # we set 0.0001 instead of 0 due to computing cost concerned.
   for (i in 1:n) {
     p[i] <- exp(beta_0 + beta_1*x[i])/(1 + exp(beta_0 + beta_1*x[i]))
     z[i] <- beta_0 + beta_1*x[i] + ((y[i]-p[i])/p[i]*(1-p[i]))
@@ -42,8 +44,18 @@ while (s < 11) {
   
   lr <- lm(z ~ x, weights = v)
   
+  
+  beta_0_pre <- beta_0
+  beta_1_pre <- beta_1
   beta_0 <- lr$coefficients[1]
   beta_1 <- lr$coefficients[2]
+  
+  convergence <- (abs(beta_0-beta_0_pre) + abs(beta_1-beta_1_pre))/2
+  print(convergence)
   s <- s + 1
 }
+
+# finally we got beta_0 and beta_1
+print(beta_0)
+print(beta_1)
 ```
