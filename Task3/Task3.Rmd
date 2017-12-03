@@ -9,9 +9,10 @@ output: pdf_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 library(knitr)
+burn.injuries <- read.table("burn.cont.dat", header=TRUE)
 ```
 
-In this task we are going to implement the Iteratively Re-Weighted Least Squares algorithm (IRWLS), which is the most frequently used method to solve the maximization problem of the log-likelihood function. This function is at the same time used to estimate the coefficients of the Logistic Regression model.
+In this task we are going to implement the Iteratively Re-Weighted Least Squares algorithm (IRWLS), which is the most frequently used method to solve the maximization problem of the log-likelihood function. This function is at the same time used to estimate the coefficients of the Logistic Regression model. Later we are going to use the glm() R function and compare the results.
 
 We will used zero as the initial value of the coefficients $\beta_0$ (beta_0) and $\beta_1$ (beta_1) and we will build a new response variable $z$, which is a linear combination of the points $x$. The formula is presented below
 
@@ -21,9 +22,6 @@ where $y_i$ is the original response variable and $p_i$ is defined as below, whi
 $$p_i=\frac{e^{\beta_0+\beta_1 x_i}}{1+e^{\beta_0+\beta_1 x_i}}$$
 
 ```{r}
-# x = as.matrix(mtcars$wt)
-# y = as.matrix(mtcars$mpg)
-
 IRWLS <- function(x,y) {
   n <- length(x)
   beta_0 <- 0
@@ -57,6 +55,13 @@ IRWLS <- function(x,y) {
   return(c(beta_0,beta_1))
 }
 
-# IRWLS(x,y)
 
+x <- burn.injuries$e
+y <- burn.injuries$superv
+betas <- IRWLS(x,y)
+
+glm.model <- glm(y~x, family = 'binomial')
+summary(glm.model)
 ```
+
+Te results obtained with our IRWLS function and glm are similar, the values of $\beta_0$ are `r betas[1]` and `r glm.model$coefficients[1]`, respectively, and the values for $\beta_1$ are `r betas[2]` and `r glm.model$coefficients[2]`. 
