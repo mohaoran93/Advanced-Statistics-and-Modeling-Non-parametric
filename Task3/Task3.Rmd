@@ -9,7 +9,6 @@ output: pdf_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 library(knitr)
-library(sm)
 ```
 
 In this task we are going to implement the Iteratively Re-Weighted Least Squares algorithm (IRWLS), which is the most frequently used method to solve the maximization problem of the log-likelihood function. This function is at the same time used to estimate the coefficients of the Logistic Regression model.
@@ -22,6 +21,8 @@ where $y_i$ is the original response variable and $p_i$ is defined as below, whi
 $$p_i=\frac{e^{\beta_0+\beta_1 x_i}}{1+e^{\beta_0+\beta_1 x_i}}$$
 
 ```{r}
+# x = as.matrix(mtcars$wt)
+# y = as.matrix(mtcars$mpg)
 
 IRWLS <- function(x,y) {
   n <- length(x)
