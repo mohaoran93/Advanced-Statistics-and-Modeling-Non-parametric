@@ -64,4 +64,11 @@ glm.model <- glm(y~x, family = 'binomial')
 summary(glm.model)
 ```
 
-Te results obtained with our IRWLS function and glm are similar, the values of $\beta_0$ are `r betas[1]` and `r glm.model$coefficients[1]`, respectively, and the values for $\beta_1$ are `r betas[2]` and `r glm.model$coefficients[2]`. 
+The results obtained with our IRWLS function and glm are similar, the values of $\beta_0$ are `r betas[1]` and `r glm.model$coefficients[1]`, respectively, and the values for $\beta_1$ are `r betas[2]` and `r glm.model$coefficients[2]`.
+
+We can obtain some information from IRWLS algorithm, for example, Residuals:
+```{r}
+alpha <- betas[1] + betas[2]*x
+residuals_IRWLS <- y - (exp(alpha)/(exp(alpha)+1))
+summary(residuals_IRWLS)
+```
