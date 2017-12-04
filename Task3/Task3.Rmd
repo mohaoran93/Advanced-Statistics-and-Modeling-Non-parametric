@@ -30,6 +30,7 @@ IRWLS <- function(x,y) {
   p <- c()
   v <- c()
   z <- c()
+  l <- 0
   convergence = 1
   #convergence != TRUE
   
@@ -51,8 +52,11 @@ IRWLS <- function(x,y) {
     convergence <- (abs(beta_0-beta_0_pre) + abs(beta_1-beta_1_pre))/2
     s <- s + 1
   }
-  
-  return(c(beta_0,beta_1))
+  for (i in 1:n){
+    l <- l+ y[i]*log(p[i]/(1-p[i]))+log(1-p[i])
+  }
+  AIC <- 4-2*l
+  return(c(beta_0,beta_1,AIC))
 }
 
 
@@ -62,8 +66,12 @@ betas <- IRWLS(x,y)
 
 glm.model <- glm(y~x, family = 'binomial')
 summary(glm.model)
+
+
+
+
 ```
 
-The results obtained with our IRWLS function and glm are similar, the values of $\beta_0$ are `r betas[1]` and `r glm.model$coefficients[1]`, respectively, and the values for $\beta_1$ are `r betas[2]` and `r glm.model$coefficients[2]`.
+The results obtained with our IRWLS function and glm are similar, the values of $\beta_0$ are `r betas[1]` and `r glm.model$coefficients[1]`, respectively, and the values for $\beta_1$ are `r betas[2]` and `r glm.model$coefficients[2]`. The AICs are 528.96 and `r betas[3]`
 
-Comparing the output of the IRWLS algorithm and glm() function we can see that from both methods the coefficients and their significance can be obtained. However, the glm function calculates de deviance and the Akaike information criterion (AIC), which are statistics to measure the goodness of fit for model comparisson (nested models in the case of the deviance and non-nested models in the case of the AIC). The IRWLS method does not adjust the coefficients for other models and therefore the deviance and AIC information cannot be obtained.
+Comparing the output of the IRWLS algorithm and glm() function we can see that from both methods the coefficients and their significance can be obtained, and after adding a little more code related computing, we can obtain Akaike information criterion (AIC) also. IRWLS is popularly used for fitting GLMs; we think that other parts of information from glm() can be obtained from parameters from IRWLS.
