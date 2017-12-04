@@ -74,4 +74,4 @@ summary(glm.model)
 
 The results obtained with our IRWLS function and glm are similar, the values of $\beta_0$ are `r betas[1]` and `r glm.model$coefficients[1]`, respectively, and the values for $\beta_1$ are `r betas[2]` and `r glm.model$coefficients[2]`. The AICs are 528.96 and `r betas[3]`
 
-Comparing the output of the IRWLS algorithm and glm() function we can see that from both methods the coefficients and their significance can be obtained, and after adding a little more code related computing, we can obtain Akaike information criterion (AIC) also. IRWLS is popularly used for fitting GLMs; we think that other parts of information from glm() can be obtained from parameters from IRWLS.
+Comparing the output of the IRWLS algorithm and glm() function we can see that from both methods the coefficients and their significance can be obtained, and after adding a little more code related computing, we can obtain Akaike information criterion (AIC) also. IRWLS is popularly used for fitting GLMs; we think that other parts of information from glm() can be computed/obtained based on parameters from IRWLS.
