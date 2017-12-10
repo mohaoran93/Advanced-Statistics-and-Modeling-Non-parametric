@@ -122,4 +122,4 @@ lines(aux$eval.points,pred,col=2)
 legend('topright', c("sm.poisson", "sm.regression", "glm"), col = c('black', 'blue', 'red'), lty = c(1, 1, 1))
 ```
 
-In this case, we can see that the parametric model fitted with a Poisson GLM could not adjust that well this time. This could be due to the fact that it is a parametric model and assumes a Poisson distribution. However, the preconditions or assumptions may not be met and therefore it has a poor fit.
+We can see that the parametric model fitted with a Poisson GLM(red line) and sm.poisson fit with h value calculated by function h.cv.sm.poisson match well. Meanwhile, the standard non-parametric fit(blue line) is likely a straight line.
