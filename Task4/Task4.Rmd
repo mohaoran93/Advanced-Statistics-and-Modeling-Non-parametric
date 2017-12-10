@@ -15,7 +15,7 @@ hist(le.fm.0,br=40)
 h.cv.sm.poisson <- function(x,y,rg.h=NULL,l.h=10,method=prob.missclas.CV){
   cv.h <- numeric(l.h)
   if (is.null(rg.h)){
-    hh <- c(h.select(x,y,method="cv"), h.select(x,y,method="aicc"))#,hcv(x,y))
+    hh <- c(h.select(x,y,method="cv"),h.select(x,y,method="aicc")) #,hcv(x,y))
     rg.h <- range(hh)
   }
   i <- 0
@@ -33,29 +33,47 @@ prob.missclas.CV <- function(x,y,h){
                  function(i,x,y,h){
                    sm.poisson(x=x[-i],y=y[-i],h=h,eval.points=x[i],display="none")$estimate
                  },   x,y,h)
+  
   return(sum(abs(pred-y)>.5)/n)
 }
 # method 2
 loglik.CV <- function(x,y,h){
   n <- length(x)
-  pred <- sapply(1:n, 
+  lambda <- sapply(1:n, 
                  function(i,x,y,h){
                    sm.poisson(x=x[-i],y=y[-i],h=h,eval.points=x[i],display="none")$estimate
                  },   x,y,h)
-  return(-sum( y*log(pred/(1-pred)) + log(1-pred) ))
+  
+  return (-sum(log(exp(-lambda)*(lambda^x)/(factorial(x)))))# using minus here is aim to keep using min later
 }
 ```
 
 
 
 ```{r}
-h.list <- h.cv.sm.poisson(inf.mort,le.fm.0)#rg.h=c(4,11)
+h.list.ps <- h.cv.sm.poisson(inf.mort,le.fm.0)#rg.h=c(4,11)
+h.list.ll <- h.cv.sm.poisson(inf.mort,le.fm.0,method = loglik.CV)
+```
 
-aux <- sm.poisson(inf.mort,le.fm.0,h=h.list$h.cv, col=1) # h=10
-sm.regression(inf.mort,le.fm.0,h=h.list$h.cv,col=4,add=T) # h=10
+Using method 1 prob.missclas.CV:
+```{r}
+aux <- sm.poisson(inf.mort,le.fm.0,h=h.list.ps$h.cv, col=1)
+sm.regression(inf.mort,le.fm.0,h=h.list.ps$h.cv,col=4,add=T)
 aux.glm <- glm(le.fm.0 ~ inf.mort,family=poisson)
 pred <- predict(aux.glm, 
                 newdata=data.frame(inf.mort=aux$eval.points),
                 type="response")
 lines(aux$eval.points,pred,col=2)
 ```
+Using method 2 loglik.CV:
+```{r}
+aux <- sm.poisson(inf.mort,le.fm.0,h=h.list.ll$h.cv, col=1)
+sm.regression(inf.mort,le.fm.0,h=h.list.ll$h.cv,col=4,add=T)
+aux.glm <- glm(le.fm.0 ~ inf.mort,family=poisson)
+pred <- predict(aux.glm, 
+                newdata=data.frame(inf.mort=aux$eval.points),
+                type="response")
+lines(aux$eval.points,pred,col=2)
+```
+
+The h valuse are similar: `h.list.ll$h.cv`,`h.list.ps$h.cv`
