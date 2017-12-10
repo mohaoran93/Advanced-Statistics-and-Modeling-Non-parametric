@@ -27,7 +27,7 @@ le.fm.0 <- pmax(0,le.fm)
 hist(le.fm.0,br=40)
 ```
 
-We can see that the frequency of difference of life expectancy between men and women shows a Poisson shape, bounded at 0, discrete values and a little bit skewed to the left. Hence, will use local Poisson regression to estimate this variable
+We can see that the frequency of difference of life expectancy between men and women shows a Poisson-like shape, it is bounded at 0, has discrete values and it is a little bit skewed to the left. Hence, will use local Poisson regression to estimate this variable
 
 First we are going to implement the function to choose the bandwith for local Poisson regression.
 
@@ -84,7 +84,7 @@ pred <- predict(aux.glm,
                 newdata=data.frame(inf.mort=aux$eval.points),
                 type="response")
 lines(aux$eval.points,pred,col=2)
-legend('topright', c("h.cv.sm.poisson", "sm.regression", "glm"), col = c('black', 'red', 'blue'), lty = c(1, 1, 1))
+legend('topright', c("h.cv.sm.poisson", "sm.regression", "glm"), col = c('black', 'blue', 'red'), lty = c(1, 1, 1))
 ```
 
 From the plot we can see that the three models curves show the same behavious, meaning that the all three can explain the response variable.
@@ -95,12 +95,12 @@ h.list <- h.cv.sm.poisson(life.exp,le.fm.0)#rg.h=c(4,11)
 
 aux <- sm.poisson(life.exp,le.fm.0,h=h.list$h.cv, col=1) # h=10
 sm.regression(life.exp,le.fm.0,h=h.list$h.cv,col=4,add=T) # h=10
-aux.glm <- glm(le.fm.0 ~ life.exp,family=poisson)
+aux.glm <- glm(le.fm.0 ~ life.exp, family=poisson)
 pred <- predict(aux.glm, 
                 newdata=data.frame(life.exp=aux$eval.points),
                 type="response")
 lines(aux$eval.points,pred,col=2)
-legend('topright', c("h.cv.sm.poisson", "sm.regression", "glm"), col = c('black', 'red', 'blue'), lty = c(1, 1, 1))
+legend('topright', c("h.cv.sm.poisson", "sm.regression", "glm"), col = c('black', 'blue', 'red'), lty = c(1, 1, 1))
 ```
 
-In this case, we can see that the model fitted with the regression function of the sm library could not adjust that well this time. This could be due to the fact that it is a non parametric model and no distribution is assumed, therefore, .....
+In this case, we can see that the parametric model fitted with a Poisson GLM could not adjust that well this time. This could be due to the fact that it is a parametric model and assumes a Poisson distribution. However, the preconditions or assumptions may not be met and therefore it has a poor fit.
