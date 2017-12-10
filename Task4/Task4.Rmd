@@ -12,17 +12,8 @@ library(knitr)
 library(sm)
 ```
 
-When we are working with nonparametric logistic model the regression function is approximated as $\theta(x)\approx\beta_0^t+\beta_1^t(x-t)$, $x$ being close to $t$ and where $\theta(x)=log(\frac{p(x)}{1-p(x)})$ and $p(x)=E(Y|X=x)$.
+In this exercise we are going to choose the bandwidth for a logistic regression model that has as response variable the difference in life expectancy between men and women (le.fm) in 132 countries. The data set used contains development indicators of the different countries. The variable le.fm always takes non-negative values, except for one country, so we are going to take 0 as minimum value.\
 
-Fitting a local logistic regression involves choosing the right bandwidth, and in order to do that we are going to use the method of maximum log-likehood for new observations, which we will estimate using leave-one-out cross-validation. Below is the function of log-likelihood using $h$ as bandwith
-
-$$l_{CV}(h) = \sum_{i=1}^nlog(\hat{Pr}_h^{(-i)}(Y=y_i|X=x_i)) = \sum_{i=1}^n(y_ilog(\frac{p_i^{(-i)}}{1-p_i^{(-i)}}) + log(1-p_i^{(-i)}))$$
-where $(y_ilog(\frac{p_i^{(-i)}}{1-p_i^{(-i)}}) + log(1-p_i^{(-i)}))$ is the contribution to the log-likelihood function of  each observation.
-
-#TODO $\lambda _i$ from
-# $l_{CV}(h)$ should be estimated by sm.poisson
-
-In this exercise we are going to choose the bandwidth for a logistic regression model that has as response variable the difference in life expectancy between men and women (le.fm) in 132 countries. The data set used contains development indicators of the different countries. The variable le.fm always takes non-negative values, except for one country, so we are going to take 0 as minimum value.
 ```{r}
 countries<-read.table(file="countries.txt",head=T,row.names=2,dec=",")
 attach(countries)
@@ -32,15 +23,15 @@ hist(le.fm.0,br=40)
 
 We can see that the frequency of difference of life expectancy between men and women shows a Poisson-like shape, it is bounded at 0, has discrete values and it is a little bit skewed to the left. Hence, will use local Poisson regression to estimate this variable
 
-First we are going to implement the function to choose the bandwith for local Poisson regression.
+Fitting a local logistic regression involves choosing the right bandwidth, and in order to do that we are going to use the method of maximum log-likehood for new observations, which we will estimate using leave-one-out cross-validation. Below is the function of log-likelihood using $h$ as bandwith
 
+$$l_{CV}(h) = \sum_{i=1}^nlog(\hat{Pr}_h^{(-i)}(Y=y_i|X=x_i)) = \sum_{i=1}^n(y_ilog(\frac{p_i^{(-i)}}{1-p_i^{(-i)}}) + log(1-p_i^{(-i)}))$$
+where $(y_ilog(\frac{p_i^{(-i)}}{1-p_i^{(-i)}}) + log(1-p_i^{(-i)}))$ is the contribution to the log-likelihood function of  each observation.
 
+Additionally, $\hat{Pr}_h^{(-i)}(Y=y_i|X=x_i)$ is a estimation the probability of events for a Poisson distribution $Pr(Y=y_i|X=x_i) = e^{-\lambda_i}\frac{\lambda_i^{x_i}}{x_i!}$ and $\lambda_i$ represents the average number of events per interval $\lambda_i=E(Y|X=x_i)$.
+
+First, we are going to implement the function to choose the bandwith for local Poisson regression using log-likelihood with cross-validation method (loglik.CV). As a matter of practice, we will compare the bandwidth obtained with the probability of missclassification method with cross-validation (prob.missclas.CV)
 ```{r}
-
-# Write your own CV bandwidth choice script for the local Poisson regression.
-# h.cv.sm.possion.R
-#
-# method can be equal to 'loglik.CV' (default) or 'prob.missclas.CV'
 h.cv.sm.poisson <- function(x, y, rg.h = NULL, l.h = 10, method = loglik.CV){
   cv.h <- numeric(l.h)
   if (is.null(rg.h)){
@@ -71,16 +62,30 @@ loglik.CV <- function(x,y,h){
                  function(i,x,y,h){
                    sm.poisson(x=x[-i],y=y[-i],h=h,eval.points=x[i],display="none")$estimate
                  },   x,y,h)
-  return (-sum(log(exp(-lambda)*(lambda^x)/(factorial(x)))))# using minus here is aim to keep using min later
+  # using minus here is aim to keep using min later
+  return (-sum(log(exp(-lambda)*(lambda^x)/(factorial(x)))))
 }
 ```
 
 Now, we are going to use the previous function to choose the bandwidth and fit a model with le.fm.0 as response variable and infant mortality rate (inf.mort) as explanatory variable.
+```{r}
+# Maximizing the log-likelihood of a new observation
+h.list.lk <- h.cv.sm.poisson(inf.mort,le.fm.0,method = loglik.CV)
 
-Firstly, we use prob.missclas.CV method to claculate h.
+aux <- sm.poisson(inf.mort,le.fm.0,h=h.list.lk$h.cv, col=1)
+sm.regression(inf.mort,le.fm.0,h=h.list.lk$h.cv,col=4,add=T)
+aux.glm <- glm(le.fm.0 ~ inf.mort,family=poisson)
+pred <- predict(aux.glm, 
+                newdata=data.frame(inf.mort=aux$eval.points),
+                type="response")
+lines(aux$eval.points,pred,col=2)
+legend('topright', c("sm.poisson", "sm.regression", "glm"), 
+       col = c('black', 'blue', 'red'), lty = c(1, 1, 1))
+```
 
 ```{r}
-h.list.pm <- h.cv.sm.poisson(inf.mort,le.fm.0,method = prob.missclas.CV) # Minimizing the probability of misclassification of a new observation
+# Minimizing the probability of misclassification of a new observation
+h.list.pm <- h.cv.sm.poisson(inf.mort,le.fm.0,method = prob.missclas.CV) 
 
 aux <- sm.poisson(inf.mort,le.fm.0,h=h.list.pm$h.cv, col=1)
 sm.regression(inf.mort,le.fm.0,h=h.list.pm$h.cv,col=4,add=T)
@@ -92,23 +97,9 @@ lines(aux$eval.points,pred,col=2)
 legend('topright', c("sm.poisson", "sm.regression", "glm"), col = c('black', 'blue', 'red'), lty = c(1, 1, 1))
 ```
 
-And then do the same but using loglik.CV method.
-```{r}
-h.list.lk <- h.cv.sm.poisson(inf.mort,le.fm.0,method = loglik.CV) # Maximizing the log-likelihood of a new observation
+From the previous plots we can see that both methods (loglik.CV and prob.missclas.CV) return similar values of bandwidth and the curves are practically the same. Additionally, we can notice that the three models show the same behaviour, meaning that the all three can explain the response variable equally good.
 
-aux <- sm.poisson(inf.mort,le.fm.0,h=h.list.lk$h.cv, col=1)
-sm.regression(inf.mort,le.fm.0,h=h.list.lk$h.cv,col=4,add=T)
-aux.glm <- glm(le.fm.0 ~ inf.mort,family=poisson)
-pred <- predict(aux.glm, 
-                newdata=data.frame(inf.mort=aux$eval.points),
-                type="response")
-lines(aux$eval.points,pred,col=2)
-legend('topright', c("sm.poisson", "sm.regression", "glm"), col = c('black', 'blue', 'red'), lty = c(1, 1, 1))
-```
-
-From the plot we can see that the three models curves show the same behavious, meaning that the all three can explain the response variable.
-
-Then we fit another model using this time life expectancy (life.exp) as explanatory variable
+On the other hand, we will fit a model using this time life expectancy (life.exp) as explanatory variable
 ```{r}
 h.list <- h.cv.sm.poisson(life.exp,le.fm.0,method = loglik.CV)#rg.h=c(4,11)
 
@@ -119,7 +110,8 @@ pred <- predict(aux.glm,
                 newdata=data.frame(life.exp=aux$eval.points),
                 type="response")
 lines(aux$eval.points,pred,col=2)
-legend('topright', c("sm.poisson", "sm.regression", "glm"), col = c('black', 'blue', 'red'), lty = c(1, 1, 1))
+legend('topright', c("sm.poisson", "sm.regression", "glm"), 
+       col = c('black', 'blue', 'red'), lty = c(1, 1, 1))
 ```
 
-We can see that the parametric model fitted with a Poisson GLM(red line) and sm.poisson fit with h value calculated by function h.cv.sm.poisson match well. Meanwhile, the standard non-parametric fit(blue line) is likely a straight line.
+We can see that the parametric model fitted with a Poisson GLM (red line) and the nonparametric Poisson regression (sm.poisson) fitted with $h$ bandwidth calculated by function h.cv.sm.poisson match pretty well. Meanwhile, the standard nonparametric fit (blue line) is likely a straight line.
