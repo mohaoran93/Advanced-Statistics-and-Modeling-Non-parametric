@@ -1,0 +1,158 @@
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r message=FALSE,warning=FALSE}
+hirs <- read.table("hirsutism.dat",header=T, sep="\t",fill=TRUE)
+attach(hirs)
+library(sm)
+```
+
+1. Solve the points 1 to 6 of Section "5.2 Hirsutism dataset". You have NOT to deliver your results for this part.
+# pint 1
+```{r message=FALSE,warning=FALSE}
+sm.regression(height,weight,model = 'no effect')
+sm.regression(height,SysPres,model = 'no effect')
+sm.regression(weight,SysPres,model = 'no effect')
+sm.regression(weight,FGm0,model = 'no effect')
+sm.regression(DiaPres,SysPres,model = 'no effect')
+
+```
+# point 2 and 3
+```{r,message=FALSE,warning=FALSE}
+# point 2
+data02 <- hirs[ which(hirs$Treatment == 0 | hirs$Treatment == 2),]
+value <- c(0,1)
+index_02 <- c(0,2)
+attach(data02)
+data02$Tr02 <- value[match(Treatment,index_02)]
+h1 <- h.select(FGm12,Tr02,method="cv")
+sm.regression(FGm12, Tr02, h=h1, display="se",model="linear")
+sig.trace(sm.regression(FGm12, Tr02, model="linear",display="none"),
+          h=seq(h1/4,4*h1,length=20))
+abline(v=h1,col=2,lty=2)
+# I have a question: when h is larger than about 12, the p-value is bigger than 0.5, how to draw the conclusion?
+data23 <- hirs[ which(hirs$Treatment == 2 | hirs$Treatment == 3),]
+value <- c(0,1)
+index_23 <- c(2,3)
+# point 3
+detach(data02)
+attach(data23)
+data23$Tr23 <- value[match(Treatment,index_23)]
+h1 <- h.select(FGm12,data23$Tr23,method="cv")
+sm.regression(FGm12, data23$Tr23, h=h1, display="se",model="linear")
+sig.trace(sm.regression(FGm12, data23$Tr23, model="linear",display="none"),
+          h=seq(h1/4,4*h1,length=20))
+abline(v=h1,col=2,lty=2)
+detach(data23)
+```
+# point 4 and 5
+```{r}
+# point  4
+attach(data02)
+sm.ancova(height,weight,g=Tr02,h = h1,model = 'equal')
+sig.trace(sm.ancova(height, weight,Tr02, model="equal",display="none"),
+          h=seq(h1/2,2*h1,length=10))
+abline(v=h1,col=2,lty=2)  
+detach(data02)
+
+attach(data23)
+# point 5
+sm.ancova(height,weight,g=Tr23,h = h1,model = 'equal')
+sig.trace(sm.ancova(height, weight,Tr23, model="equal",display="none"),
+          h=seq(h1/2,2*h1,length=10))
+abline(v=h1,col=2,lty=2)
+detach(data23)
+```
+# point 6
+```{r}
+attach(hirs)
+h1 <- h.select(height,weight,method="cv")
+sm.ancova(height,weight,g=Treatment,h = h1,model = 'equal')
+sig.trace(sm.ancova(height, weight,Treatment, model="equal",display="none"),
+          h=seq(h1/2,2*h1,length=10))
+abline(v=h1,col=2,lty=2)
+
+h1 <- h.select(height,SysPres,method="cv")
+sm.ancova(height,SysPres,g=Treatment,h = h1,model = 'equal')
+sig.trace(sm.ancova(height, SysPres,Treatment, model="equal",display="none"),
+          h=seq(h1/2,2*h1,length=10))
+abline(v=h1,col=2,lty=2)
+```
+
+# I have a question, why p-values alomost unchange when h changes
+
+# Point 7
+
+```{r message=FALSE, warning=FALSE}
+#detach(data23)
+#detach(data02)
+attach(hirs)
+h1 <- h.select(FGm0,FGm12,method="cv")
+h2 <- h.select(FGm0,FGm12,method="aicc")
+hvec = seq(min(h1,h2)/3,3*max(h1,h2), length=20)
+sm.ancova(FGm0,FGm12,g=Treatment,h = h1,model = 'equal')
+sm.ancova(FGm0,FGm12,g=Treatment,h = h2,model = 'equal')
+sig.trace(sm.ancova(FGm0, FGm12,Treatment, model="equal",display="none"),
+          h=hvec)
+```
+# point 8
+```{r}
+data8 <- hirs
+value <- c(1,0,0,0)
+index <- c(0,1,2,3)
+data8$Tr0 <- value[match(Treatment,index)]
+
+detach(hirs)
+attach(data8)
+h1 <- h.select(FGm0,FGm12,method="cv")
+h2 <- h.select(FGm0,FGm12,method="aicc")
+hvec = seq(min(h1,h2)/3,3*max(h1,h2), length=20)
+
+sm.ancova(FGm0,FGm12,g=Tr0,h = h1,model = 'equal')
+sig.trace(sm.ancova(FGm0, FGm12,g=Tr0, model="equal",display="none"),
+          h=hvec)
+
+sm.ancova(FGm0,FGm12,g=Tr0,h = h1,model = 'parallel')
+sig.trace(sm.ancova(FGm0, FGm12,g=Tr0, model="parallel",display="none"),
+          h=hvec)
+```
+# point 9
+```{r}
+#detach(data8)
+attach(hirs)
+data9 <- hirs[which(Treatment==1 | Treatment ==3),]
+
+detach(hirs)
+attach(data9)
+
+sm.ancova(FGm0,FGm12,g=Treatment,h = h1,model = 'equal')
+sig.trace(sm.ancova(FGm0, FGm12,g=Treatment, model="equal",display="none"),
+          h=hvec)
+
+sm.ancova(FGm0,FGm12,g=Treatment,h = h1,model = 'parallel')
+sig.trace(sm.ancova(FGm0, FGm12,g=Treatment, model="parallel",display="none"),
+          h=hvec)
+```
+# point 10
+```{r}
+detach(data9)
+attach(hirs)
+data10 <- hirs[which(Treatment==1 | Treatment ==2 | Treatment ==3),]
+detach(hirs)
+attach(data10)
+
+
+sm.ancova(FGm0,FGm12,g=Treatment,h = h1,model = 'equal')
+sig.trace(sm.ancova(FGm0, FGm12,g=Treatment, model="equal",display="none"),
+          h=hvec)
+
+sm.ancova(FGm0,FGm12,g=Treatment,h = h1,model = 'parallel')
+sig.trace(sm.ancova(FGm0, FGm12,g=Treatment, model="parallel",display="none"),
+          h=hvec)
+```
+
+
