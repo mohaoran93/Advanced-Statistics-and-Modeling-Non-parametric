@@ -238,5 +238,5 @@ abline(v=h2,col=3,lty=2)
 
 ```
 
-From the plot we can see that for both values of bandwith the p-value is greater than 0.05, therefore, we cannot reject the null hypothesis of linearity.
+From the plot we can see that for both values of bandwith (h1=blue, h2=red) the p-value is greater than 0.05, therefore, we cannot reject the null hypothesis of linearity.
 
