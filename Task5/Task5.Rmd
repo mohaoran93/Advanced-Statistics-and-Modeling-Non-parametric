@@ -1,19 +1,63 @@
-
+---
+title: "Advanced Statistical Modeling"
+subtitle: "Non-parametric models - Comparisson of regression functions"
+author: "Haoran Mo, Alexandra Yamaui"
+date: "December 17th, 2017"
+output: pdf_document
+---
+  
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
 
-```{r message=FALSE,warning=FALSE}
+```{r message=FALSE, warning=FALSE, include=FALSE, echo=FALSE}
 hirs <- read.table("hirsutism.dat",header=T, sep="\t",fill=TRUE)
 attach(hirs)
 library(sm)
 ```
 
-1. Solve the points 1 to 6 of Section "5.2 Hirsutism dataset". You have NOT to deliver your results for this part.
-# pint 1
-```{r message=FALSE,warning=FALSE}
+In this exercise we are going to compare different nonparametric regression functions graphically and formally in a hypothesis test performing analysis of covariance with the different populations. 
+
+In this opportunity we are going to use the Hirsutism dataset, which contains information about femail patients who suffer from this condition. Hirsutism is the excessive hairiness on women in those parts of the body where terminal hair does not normally appear or is minimal. However, Hirsutism is a symptom rather than a disease and may be a sign of other medical conditions. The amount and location of the hair is measured by a Ferriman-Gallwey score in 9 body areas. In this way, hair growth is rated from 0 (no growth of terminal hair) to 4 (extensive hair growth) in each of the nine locations. A patient’s score may therefore range from a minimum score of 0 to a maximum score of 36.
+
+A clinical trial was conducted to evaluate the effectiveness of an antiandrogen combined with an oral contraceptive in reducing hirsutism for 12 consecutive months. Patients were splitted into 4 treatment levels: level 0 (only contraceptive), 1, 2, and 3 of the antiandrogen in the study (always in combination with the contraceptive).
+
+This data set contains artificial values of measures corresponding to some patients in this study. The variables are the following:
+
+* Treatment, with values 0, 1, 2 or 3.
+* FGm0, it indicates the baseline hirsutism level at the randomization
+moment (the beginning of the clinical trial). Only women with baseline
+FG values grater than 15 where recruited.
+* FGm3, FG value at 3 months.
+* FGm6, FG value at 6 months.
+* FGm12, FG value at 12 months, the end of the trial.
+* SysPres, baseline systolic blood pressure.
+* DiaPres, baseline diastolic blood pressure.
+* weight, baseline weight.
+* height, baseline height.
+
+Whit this information we are going to make hypothesis testing to compare nonparametric regression functions over the data.
+
+Considering the following form of the $I$ regression functions to compare:
+
+$$y_{ij}=m_i(x_{ij}) + \varepsilon_{ij}, j=1,..,n_i, i=1,...,I.$$
+
+we want to test the hypothesis:
+
+\begin{center}
+  $H0: m_i(x) = m(x), i=1,..,I$ for all $x$,\ 
+  
+  $H1:$ not all the regression functions are equal.
+\end{center}
+
+$m_i(x)$ being the regression function using data from subpopulation $i, i=1,...,I$
+
+For the test hypothesis we are going to use the $ancova$ function from the $sm$ package, which is a developed version of code originally written by Stuart Young.
+
+```{r message=FALSE, warning=FALSE, include=FALSE, echo=FALSE}
+# point 1
 sm.regression(height,weight,model = 'no effect')
 sm.regression(height,SysPres,model = 'no effect')
 sm.regression(weight,SysPres,model = 'no effect')
@@ -21,27 +65,28 @@ sm.regression(weight,FGm0,model = 'no effect')
 sm.regression(DiaPres,SysPres,model = 'no effect')
 
 ```
-# point 2 and 3
-```{r,message=FALSE,warning=FALSE}
+
+```{r message=FALSE, warning=FALSE, include=FALSE, echo=FALSE}
 # point 2
 data02 <- hirs[ which(hirs$Treatment == 0 | hirs$Treatment == 2),]
 value <- c(0,1)
 index_02 <- c(0,2)
+data02$Tr02 <- value[match(data02$Treatment,index_02)]
 attach(data02)
-data02$Tr02 <- value[match(Treatment,index_02)]
 h1 <- h.select(FGm12,Tr02,method="cv")
 sm.regression(FGm12, Tr02, h=h1, display="se",model="linear")
 sig.trace(sm.regression(FGm12, Tr02, model="linear",display="none"),
           h=seq(h1/4,4*h1,length=20))
 abline(v=h1,col=2,lty=2)
 # I have a question: when h is larger than about 12, the p-value is bigger than 0.5, how to draw the conclusion?
+
+# point 3
 data23 <- hirs[ which(hirs$Treatment == 2 | hirs$Treatment == 3),]
 value <- c(0,1)
 index_23 <- c(2,3)
-# point 3
 detach(data02)
+data23$Tr23 <- value[match(data23$Treatment,index_23)]
 attach(data23)
-data23$Tr23 <- value[match(Treatment,index_23)]
 h1 <- h.select(FGm12,data23$Tr23,method="cv")
 sm.regression(FGm12, data23$Tr23, h=h1, display="se",model="linear")
 sig.trace(sm.regression(FGm12, data23$Tr23, model="linear",display="none"),
@@ -49,8 +94,8 @@ sig.trace(sm.regression(FGm12, data23$Tr23, model="linear",display="none"),
 abline(v=h1,col=2,lty=2)
 detach(data23)
 ```
-# point 4 and 5
-```{r}
+
+```{r include=FALSE, echo=FALSE}
 # point  4
 attach(data02)
 sm.ancova(height,weight,g=Tr02,h = h1,model = 'equal')
@@ -67,8 +112,9 @@ sig.trace(sm.ancova(height, weight,Tr23, model="equal",display="none"),
 abline(v=h1,col=2,lty=2)
 detach(data23)
 ```
+
+```{r include=FALSE, echo=FALSE}
 # point 6
-```{r}
 attach(hirs)
 h1 <- h.select(height,weight,method="cv")
 sm.ancova(height,weight,g=Treatment,h = h1,model = 'equal')
@@ -83,24 +129,30 @@ sig.trace(sm.ancova(height, SysPres,Treatment, model="equal",display="none"),
 abline(v=h1,col=2,lty=2)
 ```
 
-# I have a question, why p-values alomost unchange when h changes
-
 # Point 7
 
+First, we are going to compare the regression curves of $FGm12$ as a function of $FGm0$ in the four groups defined by $Treatment$. To do this, we will use the bandwidth values $h1$ and $h2$ obtained from the $h.select$ function using cross-validation and the AICc criterion, respectively. 
+
 ```{r message=FALSE, warning=FALSE}
-#detach(data23)
-#detach(data02)
 attach(hirs)
-h1 <- h.select(FGm0,FGm12,method="cv")
-h2 <- h.select(FGm0,FGm12,method="aicc")
+(h1 <- h.select(FGm0,FGm12,method="cv", group = Treatment))
+(h2 <- h.select(FGm0,FGm12,method="aicc", group = Treatment))
 hvec = seq(min(h1,h2)/3,3*max(h1,h2), length=20)
 sm.ancova(FGm0,FGm12,g=Treatment,h = h1,model = 'equal')
 sm.ancova(FGm0,FGm12,g=Treatment,h = h2,model = 'equal')
 sig.trace(sm.ancova(FGm0, FGm12,Treatment, model="equal",display="none"),
           h=hvec)
 ```
-# point 8
-```{r}
+\
+From the plot of the first ancova using $h1=$ `r h1` we can see that the 4 curves behave differently, however, the group 1 and 3 have similar curves. If we check the p-value we see that this is close but lower than 0.05, which means the rejection of null hypothesis and indicating that the regression functions are not equal.
+
+From the second ancova using $h2=$ `r h2` we can see the curves behave more or less the same as before with a p-value still lower than 0.05 and therefore, we reject again the null hypothesis.
+
+Additionally, from the signifcance trace we can see that while the bandwith parameter gets bigger the p-values decrease, having a little bump near to value 2.
+
+# Point 8
+Now, we are going to test if the regression function $FGm12$~$FGm0$ can be considered **equal** or **parallel** in the two subpopulations defined according to $Treatment=0$ or not.
+```{r message=FALSE, warning=FALSE}
 data8 <- hirs
 value <- c(1,0,0,0)
 index <- c(0,1,2,3)
@@ -108,51 +160,83 @@ data8$Tr0 <- value[match(Treatment,index)]
 
 detach(hirs)
 attach(data8)
-h1 <- h.select(FGm0,FGm12,method="cv")
-h2 <- h.select(FGm0,FGm12,method="aicc")
+(h1 <- h.select(FGm0,FGm12,method="cv", group = Tr0))
+(h2 <- h.select(FGm0,FGm12,method="aicc", group = Tr0))
 hvec = seq(min(h1,h2)/3,3*max(h1,h2), length=20)
 
 sm.ancova(FGm0,FGm12,g=Tr0,h = h1,model = 'equal')
+sm.ancova(FGm0,FGm12,g=Tr0,h = h2,model = 'equal')
 sig.trace(sm.ancova(FGm0, FGm12,g=Tr0, model="equal",display="none"),
           h=hvec)
+```
+\
+From the equality ancova test plot (using $h1$) we can see that both curves are mostly outside of the reference bands and they behave in different ways. Indeed, if we check the p-value we can see that it is far lower than 0.05, making us to reject the null hypothesis for equality. The same occurs using $h2$ bandwidth, with a p-value (0.0047) lower than 0.05.
 
+Looking at the significance trace plot we can see that the p-values are all lower than 0.05, existing a light increase around value 2.
+
+On the other hand, when we perform the ancova test for parallel regresion functions with $h1$ (below) we can see that now both curves are inside the reference bands and the p-value (0.5152) is significant. Hence, we cannot reject the null hypothesis of these regression functions being parallel. In the same way, when we perform the ancova with $h2$, again both curves are inside the bands and the p-value is greater than 0.05, meaning that both curves are parallel.
+
+The significance trace shows that almost all the p-values are higher than 0.05, existing an increase around values 2 and 3.
+
+```{r}
 sm.ancova(FGm0,FGm12,g=Tr0,h = h1,model = 'parallel')
+sm.ancova(FGm0,FGm12,g=Tr0,h = h2,model = 'parallel')
 sig.trace(sm.ancova(FGm0, FGm12,g=Tr0, model="parallel",display="none"),
           h=hvec)
+detach(data8)
 ```
-# point 9
-```{r}
-#detach(data8)
+
+# Point 9
+
+Then we are going to test if the regression function $FGm12$~$FGm0$ can be considered equal or parallel using only patients with treatments 1 and 3.
+```{r message=FALSE}
 attach(hirs)
 data9 <- hirs[which(Treatment==1 | Treatment ==3),]
 
 detach(hirs)
 attach(data9)
 
+(h1 <- h.select(FGm0,FGm12,method="cv", group = Treatment))
+(h2 <- h.select(FGm0,FGm12,method="aicc", group = Treatment))
+hvec = seq(min(h1,h2)/3,3*max(h1,h2), length=20)
+
 sm.ancova(FGm0,FGm12,g=Treatment,h = h1,model = 'equal')
+sm.ancova(FGm0,FGm12,g=Treatment,h = h2,model = 'equal')
 sig.trace(sm.ancova(FGm0, FGm12,g=Treatment, model="equal",display="none"),
           h=hvec)
 
 sm.ancova(FGm0,FGm12,g=Treatment,h = h1,model = 'parallel')
+sm.ancova(FGm0,FGm12,g=Treatment,h = h2,model = 'parallel')
 sig.trace(sm.ancova(FGm0, FGm12,g=Treatment, model="parallel",display="none"),
           h=hvec)
-```
-# point 10
-```{r}
 detach(data9)
+```
+
+Performing an ancova test using bandwidth $h1$ we can see graphically that both curves have a similar behaviour and both are inside the reference bands. Actually, if we check the p-value we can see that it is higher than 0.05, which indicates that we cannot reject the null hypothesis of equality between the 2 populations. A similar scenario occurs using $h2$, the p-value is signicant and the curves are inside the bands, with which we cannot reject the null hypothesis.
+
+We can see in the significance trace plot that the p-values increase while the bandwidth parameter increases.
+
+As is expected, performing a parallel hypothesis ancova over the two populations we cannot reject the null hypothesis for none of the 2 values of bandwith. In this case, the significance trace shows that after the value 4 of bandwidth the p-value increases in a linear way.
+
+# Point 10
+At last, we are going to test the linearity for the regression function $FGm12$~$FGm0$ using only the patients with treatments 1, 2 or 3.
+
+```{r message=FALSE}
 attach(hirs)
 data10 <- hirs[which(Treatment==1 | Treatment ==2 | Treatment ==3),]
 detach(hirs)
 attach(data10)
 
+(h1 <- h.select(FGm0,FGm12,method="cv", group = Treatment))
+(h2 <- h.select(FGm0,FGm12,method="aicc", group = Treatment))
+hvec = seq(min(h1,h2)/3,3*max(h1,h2), length=20)
 
-sm.ancova(FGm0,FGm12,g=Treatment,h = h1,model = 'equal')
-sig.trace(sm.ancova(FGm0, FGm12,g=Treatment, model="equal",display="none"),
+sig.trace(sm.regression(FGm0, FGm12, model="linear",display="none"),
           h=hvec)
+abline(v=h1,col=2,lty=2)  
+abline(v=h2,col=3,lty=2)  
 
-sm.ancova(FGm0,FGm12,g=Treatment,h = h1,model = 'parallel')
-sig.trace(sm.ancova(FGm0, FGm12,g=Treatment, model="parallel",display="none"),
-          h=hvec)
 ```
 
+From the plot we can see that for both values of bandwith the p-value is greater than 0.05, therefore, we cannot reject the null hypothesis of linearity.
 
