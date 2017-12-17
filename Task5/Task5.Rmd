@@ -18,13 +18,13 @@ attach(hirs)
 library(sm)
 ```
 
-In this exercise we are going to compare different nonparametric regression functions graphically and formally in a hypothesis test performing analysis of covariance with the different populations. 
+In this exercise, we are going to compare different nonparametric regression functions graphically and formally in a hypothesis test performing analysis of covariance with the different populations.
 
-In this opportunity we are going to use the Hirsutism dataset, which contains information about femail patients who suffer from this condition. Hirsutism is the excessive hairiness on women in those parts of the body where terminal hair does not normally appear or is minimal. However, Hirsutism is a symptom rather than a disease and may be a sign of other medical conditions. The amount and location of the hair is measured by a Ferriman-Gallwey score in 9 body areas. In this way, hair growth is rated from 0 (no growth of terminal hair) to 4 (extensive hair growth) in each of the nine locations. A patient’s score may therefore range from a minimum score of 0 to a maximum score of 36.
+In this opportunity, we are going to use the Hirsutism dataset, which contains information about female patients who suffer from this condition. Hirsutism is the excessive hairiness on women in those parts of the body where terminal hair does not normally appear or is minimal. However, Hirsutism is a symptom rather than a disease and may be a sign of other medical conditions. The amount and location of the hair are measured by a Ferriman-Gallwey score in 9 body areas. In this way, hair growth is rated from 0 (no growth of terminal hair) to 4 (extensive hair growth) in each of the nine locations. A patient’s score may, therefore, range from a minimum score of 0 to a maximum score of 36.
 
-A clinical trial was conducted to evaluate the effectiveness of an antiandrogen combined with an oral contraceptive in reducing hirsutism for 12 consecutive months. Patients were splitted into 4 treatment levels: level 0 (only contraceptive), 1, 2, and 3 of the antiandrogen in the study (always in combination with the contraceptive).
+A clinical trial was conducted to evaluate the effectiveness of an antiandrogen combined with an oral contraceptive in reducing hirsutism for 12 consecutive months. Patients were split into 4 treatment levels: level 0 (only contraceptive), 1, 2, and 3 of the antiandrogen in the study (always in combination with the contraceptive).
 
-This data set contains artificial values of measures corresponding to some patients in this study. The variables are the following:
+This dataset contains artificial values of measures corresponding to some patients in this study. The variables are the following:
 
 * Treatment, with values 0, 1, 2 or 3.
 * FGm0, it indicates the baseline hirsutism level at the randomization
@@ -38,7 +38,7 @@ FG values grater than 15 where recruited.
 * weight, baseline weight.
 * height, baseline height.
 
-Whit this information we are going to make hypothesis testing to compare nonparametric regression functions over the data.
+With this information we are going to make hypothesis testing to compare nonparametric regression functions over the data.
 
 Considering the following form of the $I$ regression functions to compare:
 
@@ -138,13 +138,13 @@ attach(hirs)
 (h1 <- h.select(FGm0,FGm12,method="cv", group = Treatment))
 (h2 <- h.select(FGm0,FGm12,method="aicc", group = Treatment))
 hvec = seq(min(h1,h2)/3,3*max(h1,h2), length=20)
-sm.ancova(FGm0,FGm12,g=Treatment,h = h1,model = 'equal')
+s1 = sm.ancova(FGm0,FGm12,g=Treatment,h = h1,model = 'equal')
 sm.ancova(FGm0,FGm12,g=Treatment,h = h2,model = 'equal')
 sig.trace(sm.ancova(FGm0, FGm12,Treatment, model="equal",display="none"),
           h=hvec)
 ```
 \
-From the plot of the first ancova using $h1=$ `r h1` we can see that the 4 curves behave differently, however, the group 1 and 3 have similar curves. If we check the p-value we see that this is close but lower than 0.05, which means the rejection of null hypothesis and indicating that the regression functions are not equal.
+From the plot of the first ancova using $h1=$ `r h1` we can see that the 4 curves behave differently, however, the group 1 and 3 have similar curves#TODO: {Please check, I don't think 1 and 3 have similar curves, please check.}. If we check the p-value we see that this is close but lower than 0.05, which means the rejection of null hypothesis and indicating that the regression functions are not equal.
 
 From the second ancova using $h2=$ `r h2` we can see the curves behave more or less the same as before with a p-value still lower than 0.05 and therefore, we reject again the null hypothesis.
 
@@ -157,7 +157,6 @@ data8 <- hirs
 value <- c(1,0,0,0)
 index <- c(0,1,2,3)
 data8$Tr0 <- value[match(Treatment,index)]
-
 detach(hirs)
 attach(data8)
 (h1 <- h.select(FGm0,FGm12,method="cv", group = Tr0))
@@ -170,11 +169,11 @@ sig.trace(sm.ancova(FGm0, FGm12,g=Tr0, model="equal",display="none"),
           h=hvec)
 ```
 \
-From the equality ancova test plot (using $h1$) we can see that both curves are mostly outside of the reference bands and they behave in different ways. Indeed, if we check the p-value we can see that it is far lower than 0.05, making us to reject the null hypothesis for equality. The same occurs using $h2$ bandwidth, with a p-value (0.0047) lower than 0.05.
+From the equality ancova test plot (using $h1$) we can see that both curves are mostly outside of the reference bands and they behave in different ways. Indeed, if we check the p-value we can see that it is far lower than 0.05, making us reject the null hypothesis for equality. The same occurs using $h2$ bandwidth, with a p-value (0.0047) lower than 0.05.
 
 Looking at the significance trace plot we can see that the p-values are all lower than 0.05, existing a light increase around value 2.
 
-On the other hand, when we perform the ancova test for parallel regresion functions with $h1$ (below) we can see that now both curves are inside the reference bands and the p-value (0.5152) is significant. Hence, we cannot reject the null hypothesis of these regression functions being parallel. In the same way, when we perform the ancova with $h2$, again both curves are inside the bands and the p-value is greater than 0.05, meaning that both curves are parallel.
+On the other hand, when we perform the ancova test for parallel regression functions with $h1$ (below) we can see that now both curves are inside the reference bands and the p-value (0.5152) is significant. Hence, we cannot reject the null hypothesis of these regression functions being parallel. In the same way, when we perform the ancova with $h2$, again both curves are inside the bands and the p-value is greater than 0.05, meaning that both curves are parallel.
 
 The significance trace shows that almost all the p-values are higher than 0.05, existing an increase around values 2 and 3.
 
@@ -212,11 +211,11 @@ sig.trace(sm.ancova(FGm0, FGm12,g=Treatment, model="parallel",display="none"),
 detach(data9)
 ```
 
-Performing an ancova test using bandwidth $h1$ we can see graphically that both curves have a similar behaviour and both are inside the reference bands. Actually, if we check the p-value we can see that it is higher than 0.05, which indicates that we cannot reject the null hypothesis of equality between the 2 populations. A similar scenario occurs using $h2$, the p-value is signicant and the curves are inside the bands, with which we cannot reject the null hypothesis.
+Performing an ancova test using bandwidth $h1$ we can see graphically that both curves have a similar behaviour and are inside the reference bands. Actually, if we check the p-value we can see that it is higher than 0.05, which indicates that we cannot reject the null hypothesis of equality between the 2 populations. A similar scenario occurs using $h2$, the p-value is signficant and the curves are inside the bands, with which we cannot reject the null hypothesis.
 
 We can see in the significance trace plot that the p-values increase while the bandwidth parameter increases.
 
-As is expected, performing a parallel hypothesis ancova over the two populations we cannot reject the null hypothesis for none of the 2 values of bandwith. In this case, the significance trace shows that after the value 4 of bandwidth the p-value increases in a linear way.
+As is expected, performing a parallel hypothesis ancova over the two populations we cannot reject the null hypothesis for none of the 2 values of bandwidth. In this case, the significance trace shows that after the value 4 of bandwidth the p-value increases in a linear way.
 
 # Point 10
 At last, we are going to test the linearity for the regression function $FGm12$~$FGm0$ using only the patients with treatments 1, 2 or 3.
