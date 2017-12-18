@@ -56,78 +56,7 @@ $m_i(x)$ being the regression function using data from subpopulation $i, i=1,...
 
 For the test hypothesis we are going to use the $ancova$ function from the $sm$ package, which is a developed version of code originally written by Stuart Young.
 
-```{r message=FALSE, warning=FALSE, include=FALSE, echo=FALSE}
-# point 1
-sm.regression(height,weight,model = 'no effect')
-sm.regression(height,SysPres,model = 'no effect')
-sm.regression(weight,SysPres,model = 'no effect')
-sm.regression(weight,FGm0,model = 'no effect')
-sm.regression(DiaPres,SysPres,model = 'no effect')
 
-```
-
-```{r message=FALSE, warning=FALSE, include=FALSE, echo=FALSE}
-# point 2
-data02 <- hirs[ which(hirs$Treatment == 0 | hirs$Treatment == 2),]
-value <- c(0,1)
-index_02 <- c(0,2)
-data02$Tr02 <- value[match(data02$Treatment,index_02)]
-attach(data02)
-h1 <- h.select(FGm12,Tr02,method="cv")
-sm.regression(FGm12, Tr02, h=h1, display="se",model="linear")
-sig.trace(sm.regression(FGm12, Tr02, model="linear",display="none"),
-          h=seq(h1/4,4*h1,length=20))
-abline(v=h1,col=2,lty=2)
-# I have a question: when h is larger than about 12, the p-value is bigger than 0.5, how to draw the conclusion?
-
-# point 3
-data23 <- hirs[ which(hirs$Treatment == 2 | hirs$Treatment == 3),]
-value <- c(0,1)
-index_23 <- c(2,3)
-detach(data02)
-data23$Tr23 <- value[match(data23$Treatment,index_23)]
-attach(data23)
-h1 <- h.select(FGm12,data23$Tr23,method="cv")
-sm.regression(FGm12, data23$Tr23, h=h1, display="se",model="linear")
-sig.trace(sm.regression(FGm12, data23$Tr23, model="linear",display="none"),
-          h=seq(h1/4,4*h1,length=20))
-abline(v=h1,col=2,lty=2)
-detach(data23)
-```
-
-```{r include=FALSE, echo=FALSE}
-# point  4
-attach(data02)
-sm.ancova(height,weight,g=Tr02,h = h1,model = 'equal')
-sig.trace(sm.ancova(height, weight,Tr02, model="equal",display="none"),
-          h=seq(h1/2,2*h1,length=10))
-abline(v=h1,col=2,lty=2)  
-detach(data02)
-
-attach(data23)
-# point 5
-sm.ancova(height,weight,g=Tr23,h = h1,model = 'equal')
-sig.trace(sm.ancova(height, weight,Tr23, model="equal",display="none"),
-          h=seq(h1/2,2*h1,length=10))
-abline(v=h1,col=2,lty=2)
-detach(data23)
-```
-
-```{r include=FALSE, echo=FALSE}
-# point 6
-attach(hirs)
-h1 <- h.select(height,weight,method="cv")
-sm.ancova(height,weight,g=Treatment,h = h1,model = 'equal')
-sig.trace(sm.ancova(height, weight,Treatment, model="equal",display="none"),
-          h=seq(h1/2,2*h1,length=10))
-abline(v=h1,col=2,lty=2)
-
-h1 <- h.select(height,SysPres,method="cv")
-sm.ancova(height,SysPres,g=Treatment,h = h1,model = 'equal')
-sig.trace(sm.ancova(height, SysPres,Treatment, model="equal",display="none"),
-          h=seq(h1/2,2*h1,length=10))
-abline(v=h1,col=2,lty=2)
-```
 
 # Point 7
 
@@ -238,4 +167,80 @@ abline(v=h2,col=3,lty=2)
 ```
 
 From the plot we can see that for both values of bandwith (h1=blue, h2=red) the p-value is greater than 0.05, therefore, we cannot reject the null hypothesis of linearity.
+
+Appendix:
+
+This appendix includes solutions of points 1 to 6 which are not required to submit.
+
+```{r message=FALSE, warning=FALSE, include=FALSE, echo=FALSE}
+# point 1
+sm.regression(height,weight,model = 'no effect')
+sm.regression(height,SysPres,model = 'no effect')
+sm.regression(weight,SysPres,model = 'no effect')
+sm.regression(weight,FGm0,model = 'no effect')
+sm.regression(DiaPres,SysPres,model = 'no effect')
+
+```
+
+```{r message=FALSE, warning=FALSE, include=FALSE, echo=FALSE}
+# point 2
+data02 <- hirs[ which(hirs$Treatment == 0 | hirs$Treatment == 2),]
+value <- c(0,1)
+index_02 <- c(0,2)
+data02$Tr02 <- value[match(data02$Treatment,index_02)]
+attach(data02)
+h1 <- h.select(FGm12,Tr02,method="cv")
+sm.regression(FGm12, Tr02, h=h1, display="se",model="linear")
+sig.trace(sm.regression(FGm12, Tr02, model="linear",display="none"),
+          h=seq(h1/4,4*h1,length=20))
+abline(v=h1,col=2,lty=2)
+
+# point 3
+data23 <- hirs[ which(hirs$Treatment == 2 | hirs$Treatment == 3),]
+value <- c(0,1)
+index_23 <- c(2,3)
+detach(data02)
+data23$Tr23 <- value[match(data23$Treatment,index_23)]
+attach(data23)
+h1 <- h.select(FGm12,data23$Tr23,method="cv")
+sm.regression(FGm12, data23$Tr23, h=h1, display="se",model="linear")
+sig.trace(sm.regression(FGm12, data23$Tr23, model="linear",display="none"),
+          h=seq(h1/4,4*h1,length=20))
+abline(v=h1,col=2,lty=2)
+detach(data23)
+```
+
+```{r message=FALSE, warning=FALSE,include=FALSE, echo=FALSE}
+# point  4
+attach(data02)
+sm.ancova(height,weight,g=Tr02,h = h1,model = 'equal')
+sig.trace(sm.ancova(height, weight,Tr02, model="equal",display="none"),
+          h=seq(h1/2,2*h1,length=10))
+abline(v=h1,col=2,lty=2)  
+detach(data02)
+
+attach(data23)
+# point 5
+sm.ancova(height,weight,g=Tr23,h = h1,model = 'equal')
+sig.trace(sm.ancova(height, weight,Tr23, model="equal",display="none"),
+          h=seq(h1/2,2*h1,length=10))
+abline(v=h1,col=2,lty=2)
+detach(data23)
+```
+
+```{r message=FALSE, warning=FALSE,include=FALSE, echo=FALSE}
+# point 6
+attach(hirs)
+h1 <- h.select(height,weight,method="cv")
+sm.ancova(height,weight,g=Treatment,h = h1,model = 'equal')
+sig.trace(sm.ancova(height, weight,Treatment, model="equal",display="none"),
+          h=seq(h1/2,2*h1,length=10))
+abline(v=h1,col=2,lty=2)
+
+h1 <- h.select(height,SysPres,method="cv")
+sm.ancova(height,SysPres,g=Treatment,h = h1,model = 'equal')
+sig.trace(sm.ancova(height, SysPres,Treatment, model="equal",display="none"),
+          h=seq(h1/2,2*h1,length=10))
+abline(v=h1,col=2,lty=2)
+```
 
