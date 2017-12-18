@@ -144,7 +144,7 @@ sig.trace(sm.ancova(FGm0, FGm12,Treatment, model="equal",display="none"),
           h=hvec)
 ```
 \
-From the plot of the first ancova using $h1=$ `r h1` we can see that the 4 curves behave differently, however, the group 1 and 3 have similar curves#TODO: {Please check, I don't think 1 and 3 have similar curves, please check.}. If we check the p-value we see that this is close but lower than 0.05, which means the rejection of null hypothesis and indicating that the regression functions are not equal.
+From the plot of the first ancova using $h1=$ `r h1` we can see that the 4 curves behave differently, however, the group 1 and 3 have slightly similar curves. If we check the p-value we see that this is close but lower than 0.05, which means the rejection of null hypothesis and indicating that the regression functions are not equal.
 
 From the second ancova using $h2=$ `r h2` we can see the curves behave more or less the same as before with a p-value still lower than 0.05 and therefore, we reject again the null hypothesis.
 
