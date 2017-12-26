@@ -1,0 +1,51 @@
+---
+title: "Task6"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+# section 6.4 
+```{r,message=FALSE}
+load("meat.Rdata")
+attach(meat)
+lgfat <- log(Fat)
+abs.850.s <- sort(abs.850,index.return = TRUE)
+lgfat <- lgfat[abs.850.s$ix]
+# point 1: combine lm and bs
+k <- 3
+my.knots <- abs.850.s$x
+
+# 1 inner.knots
+inner.knots <- my.knots[-c(1,length(my.knots))] 
+
+# 2 inner.knots
+inner.knots <- quantile(abs.850.s$x,seq(0,1,length=length(abs.850.s$x)/30))
+# TODO I do not know how to process this "Use a 10-fold cross-validation procedure to determine the number of inner knots."
+# I guess we wil use cross-validation to determine the value of df.
+
+basis <- bs(x =abs.850.s$x, knots = inner.knots,degree = k)
+lm.spl <- lm(lgfat~basis)
+plot(abs.850.s$x,lgfat)
+lines(abs.850.s$x,lm.spl$fitted.values,col=2)
+abline(v=inner.knots,lty=2,col="grey")
+
+
+# point 2: smooth.spline
+new.abs8 <- seq(min(abs.850.s$x),max(abs.850.s$x),length=1000)
+# TODO use the same df as before.
+sm.spl <- smooth.spline(abs.850.s$x,lgfat)
+pred.lgfat <- predict(sm.spl,x = new.abs8)
+lines(pred.lgfat,col=3)
+
+
+```
+# section 6.4 point 2
+```{r,message=FALSE}
+
+```
+
+
