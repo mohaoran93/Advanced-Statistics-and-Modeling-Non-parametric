@@ -1,0 +1,87 @@
+---
+title: "Task7"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# section 7.5: Hirsutism dataset
+```{r}
+library(mgcv)
+hir <- read.table("hirsutism.dat",header=T,sep = "\t")
+head(hir)
+```
+
+```{r,message=FALSE}
+attach(hir)
+names(hir)
+```
+
+# Section 7.4, point 7.
+Variable `le.fm` always takes non-negative values, except for one country. Define the variable
+```{r,message=FALSE}
+le.fm.0 <- pmax(0,le.fm)  
+```
+Use function `gam` from package `mgcv`, with `family=poisson`, to fit the following local Poisson regression models: 
+
+* `le.fm.0 ~ inf.mort + life.exp` 
+* `le.fm.0 ~ s(inf.mort) + life.exp` 
+* `le.fm.0 ~ inf.mort + s(life.exp)` 
+* `le.fm.0 ~ s(inf.mort) + s(life.exp)` 
+* `le.fm.0 ~ s(inf.mort,life.exp)` 
+```{r,message=FALSE}
+gam1.0 <- gam(le.fm.0 ~ inf.mort + life.exp, data=hir,family=poisson)
+gam1.1 <- gam(le.fm.0 ~ s(inf.mort) + life.exp, data=hir,family=poisson)
+gam1.2 <- gam(le.fm.0 ~ inf.mort + s(life.exp), data=hir,family=poisson)
+gam1.3 <- gam(le.fm.0 ~ s(inf.mort) + s(life.exp), data=hir,family=poisson)
+gam1.4 <- gam(le.fm.0 ~ s(inf.mort,life.exp), data=hir,family=poisson)
+```
+Use function anova to compare the models we fitted two by two.
+```{r}
+# Qeustion: The Chisq test can be an exact test (lm models with known scale) or a likelihood-ratio test or a test of the reduction in scaled deviance depending on the method.
+anova(gam1.0,gam1.1,test="Chisq")
+anova(gam1.0,gam1.2,test="Chisq")
+anova(gam1.0,gam1.3,test="Chisq")
+anova(gam1.0,gam1.4,test="Chisq")
+anova(gam1.1,gam1.2,test="Chisq")
+anova(gam1.1,gam1.3,test="Chisq")
+anova(gam1.1,gam1.4,test="Chisq")
+anova(gam1.2,gam1.3,test="Chisq")# gam1.2 is significantly different form model gam1.3 at $\alpha$=0.1
+anova(gam1.2,gam1.4,test="Chisq")
+anova(gam1.3,gam1.4,test="Chisq")
+
+```
+
+#TODO: propose a final model.
+
+# section 7.5
+```{r,message=FALSE}
+
+# the variables that has been measured at the begining of the clinical trial are FGm0, SysPres, DiaPres, weight, height. 
+# Fit FGm12 ~ some variables at the begining and treatment
+# Firstly, we go with linear
+m1 <- gam(FGm12~FGm0+SysPres+DiaPres+weight+height,data = hir)
+summary(m1)
+#From the summary(m1) information, we select FGmo as the linear independent variable
+
+```
+
+```{r}
+# we think SysPres and DiaPres may works together, so we try m2 and m3
+m2 <- gam(FGm12~s(SysPres)+s(DiaPres))
+summary(m2)
+plot(m2,pages=1,residuals=TRUE)
+plot(m2,pages=1,pers=TRUE)
+
+```
+
+```{r}
+m3 <- gam(FGm12~ s(SysPres,DiaPres))
+summary(m3)
+plot(m2,pages=1,residuals=TRUE)
+plot(m2,pages=1,pers=TRUE)
+
+#The GCV score is the minimised generalised cross-validation (GCV) score of the GAM fitted. Smaller values indicated better fitting models.
+```

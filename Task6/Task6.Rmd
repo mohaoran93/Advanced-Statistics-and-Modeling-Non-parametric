@@ -11,6 +11,8 @@ knitr::opts_chunk$set(echo = TRUE)
 # section 6.4 
 ```{r,message=FALSE}
 load("meat.Rdata")
+library(mgcv)
+library(splines)
 attach(meat)
 lgfat <- log(Fat)
 abs.850.s <- sort(abs.850,index.return = TRUE)
@@ -40,8 +42,6 @@ new.abs8 <- seq(min(abs.850.s$x),max(abs.850.s$x),length=1000)
 sm.spl <- smooth.spline(abs.850.s$x,lgfat)
 pred.lgfat <- predict(sm.spl,x = new.abs8)
 lines(pred.lgfat,col=3)
-
-
 ```
 # section 6.4 point 2
 ```{r,message=FALSE}
