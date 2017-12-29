@@ -71,12 +71,13 @@ cv <- colMeans(cv_tmp)
 # step 4 plot
 require(Hmisc)
 
-plot(df, mse, type = "l", lwd = 2, col = 3, ylab = "mse and (y - y_hat)", 
+plot(df, mse, type = "l", lwd = 2, col = 3, ylab = "mse:green line; (y - y_hat): blue line", 
     xlab = "Flexibilty: df value", main = "10-fold Cross-Validation", ylim = c(0.2, 0.7))
-#cv_sd <- apply(cv_tmp, 2, sd)/sqrt(n_folds)
-#errbar(df, cv, cv + cv_sd, cv - cv_sd, add = TRUE, col = "steelblue2", pch = 19, lwd = 0.5)
+cv_sd <- apply(cv_tmp, 2, sd)/sqrt(n_folds)
+errbar(df, cv, cv + cv_sd, cv - cv_sd, add = TRUE, col = "steelblue2", pch = 19, lwd = 0.5)
 lines(df, cv, lwd = 2, col = "steelblue2")
 points(df, cv, col = "steelblue2", pch = 19)
+# The green line is mse of trainning. As df increase, the model tend to be overfiting. The best df valuse shoud be around 10 from the viewing of bule line.
 ```
 
 ```{r}
@@ -90,10 +91,10 @@ lines(abs.850.s$x,lm.spl$fitted.values,col=2)
 
 # point 2: smooth.spline
 new.abs8 <- seq(min(abs.850.s$x),max(abs.850.s$x),length=1000)
-# TODO use the same df as before.
-sm.spl <- smooth.spline(abs.850.s$x,lgfat)
+sm.spl <- smooth.spline(abs.850.s$x,lgfat,df=10)
 pred.lgfat <- predict(sm.spl,x = new.abs8)
 lines(pred.lgfat,col=3)
+# we can find that two lines match well.
 ```
 # section 6.4 point 2
 ```{r,message=FALSE}
