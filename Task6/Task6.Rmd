@@ -28,12 +28,53 @@ inner.knots <- my.knots[-c(1,length(my.knots))]
 inner.knots <- quantile(abs.850.s$x,seq(0,1,length=length(abs.850.s$x)/30))
 # TODO I do not know how to process this "Use a 10-fold cross-validation procedure to determine the number of inner knots."
 # I guess we wil use cross-validation to determine the value of df.
+```
 
-basis <- bs(x =abs.850.s$x, knots = inner.knots,degree = k)
+```{r}
+# 3 this part tris to implement the 10-fold cross-validation
+# t: Matrix Transpose
+#seed <- 0
+# omitted test part
+# step 3
+
+n_folds <- 10
+folds_i <- sample(rep(1:n_folds, length.out = length(meat$Fat))) # n_train = 100 length(meat$Fat)
+cv_tmp <- matrix(NA, nrow = n_folds, ncol = length(df))
+for (k in 1:n_folds) {
+  # fold
+  test_i <- which(folds_i == k)
+  train_xy <- meat[-test_i, ]
+  test_xy <- meat[test_i, ]
+  x <- train_xy$abs.850
+  #y <- log(train_xy$Fat)
+  y <- train_xy$Fat
+  fitted_models <- apply(t(df), 2, function(degf) lm(log(y) ~ bs(x =x, df = degf,degree = k)))
+  x <- test_xy$abs.850
+  #y <- log(test_xy$Fat) # todo, should I use log for test, I guess no
+  y <- test_xy$Fat
+  pred <- mapply(function(obj, degf) predict(obj, data.frame(bs(x, df = degf))),fitted_models, df)
+  cv_tmp[k, ] <- sapply(as.list(data.frame(pred)), function(y_hat) mean((y - y_hat)^2))
+}
+cv <- colMeans(cv_tmp)
+
+# step 4 plot
+require(Hmisc)
+
+plot(df, mse, type = "l", lwd = 2, col = 3, ylab = "error", 
+    xlab = "Flexibilty: df value", main = "10-fold Cross-Validation", ylim = c(0.2, 0.6), log = "x")
+#cv_sd <- apply(cv_tmp, 2, sd)/sqrt(n_folds)
+#errbar(df, cv, cv + cv_sd, cv - cv_sd, add = TRUE, col = "steelblue2", pch = 19, lwd = 0.5)
+lines(df, cv, lwd = 2, col = "steelblue2")
+points(df, cv, col = "steelblue2", pch = 19)
+```
+
+```{r}
+#basis <- bs(x =abs.850.s$x, knots = inner.knots,degree = k)
+basis <- bs(x =abs.850.s$x, df=18,degree = k)
 lm.spl <- lm(lgfat~basis)
 plot(abs.850.s$x,lgfat)
 lines(abs.850.s$x,lm.spl$fitted.values,col=2)
-abline(v=inner.knots,lty=2,col="grey")
+#abline(v=inner.knots,lty=2,col="grey")
 
 
 # point 2: smooth.spline
