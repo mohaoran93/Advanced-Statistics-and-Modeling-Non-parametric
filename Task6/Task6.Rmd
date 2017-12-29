@@ -33,7 +33,8 @@ inner.knots <- quantile(abs.850.s$x,seq(0,1,length=length(abs.850.s$x)/30))
 ```{r}
 # 3 this part tris to implement the 10-fold cross-validation
 # t: Matrix Transpose
-seed <- 0
+seed <- 1800
+set.seed(seed)
 # step 1, find the relation between trainning error ~ df
 train_set <- createDataPartition(meat$Fat, p = 0.8, list = FALSE)
 train_df <- meat[train_set,]
@@ -61,7 +62,7 @@ for (k in 1:n_folds) {
   x <- test_xy$abs.850
   y <- log(test_xy$Fat)
   
-  # randomly, some 'x' values may beyond boundary knots
+  # randomly, some 'x' values may beyond boundary knots. So I set the seed.
   pred <- mapply(function(obj, degf) predict(obj, data.frame(bs(x, df = degf,degree = k))),fitted_models, df)
   cv_tmp[k, ] <- sapply(as.list(data.frame(pred)), function(y_hat) mean((y - y_hat)^2))
 }
