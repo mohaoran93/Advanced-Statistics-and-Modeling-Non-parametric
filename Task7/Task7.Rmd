@@ -1,30 +1,33 @@
 ---
-title: "Task7"
+title: "Advanced Statistical Modeling"
+subtitle: "Non-parametric models - Generalized Additive Models and Semiparametric models"
+author: "Haoran Mo, Alexandra Yamaui"
+date: "December 28th, 2017"
 output: pdf_document
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-```
-
-# section 7.5: Hirsutism dataset
-```{r}
 library(mgcv)
-hir <- read.table("hirsutism.dat",header=T,sep = "\t")
-head(hir)
 ```
 
-```{r,message=FALSE}
-attach(hir)
-names(hir)
-```
+When we use Generalized nonparametric multiple regression models, the nonparametric estimation of the smooth function $\theta$ and the smooth regression function $m$ by maximum local likelihood can suffer the effects of the curse of dimensionality, that is, in high dimensional spaces the neighborhood of any point $x$ does not contain enough observed data. To overcome this problem a solution is to use Generalized Addittive Models (GAM).
 
-# Section 7.4, point 7.
-Variable `le.fm` always takes non-negative values, except for one country. Define the variable
+The GAM are nonparametric regression models less flexible than the generalized multiple nonparametric regression models, but have the advantage of being able to be estimated even when the number of explanatory variables is high. The main assumption with this kind of models is that the nonparametric link functions $g_j(x_j)$ are combined additively to produce the nonparametric p-dimensional regression function.
+
+Furthermore, some modifications can be applied to the link function $g_j(x_j)$, allowing these functions to be linear or combining the effect of several explanatory variables. The resulting model is known as Semiparametric model and we will use it to explain the response variable.
+
+# Generalized additive models and semiparametric models
+In this exercise we are going to use the `countries` dataset, which contains development indicators of the different countries. We are going to build different Generalized Addittive Models to explain the difference in life expectancy between men and women (le.fm) using the infant mortality rate (inf.mort) and life expectancy at birth (life.exp) as explanatory variables. Additionally, we will build semiparametric models applying spline based smooths over the explanatory variables. At last, we will use analysis of variance (ANOVA) to compare the semiparametric models and choose the best one. For GAM models the goal is minimize the residual deviance (goodness of fit) and minimize the degrees of freedom.
+
+Bacause the variable `le.fm` always takes non-negative values, except for one country we will take 0 as minimum value and define this new variable as `le.fm.0`
 ```{r,message=FALSE}
+countries <- read.table(file="countries.txt",head=T,row.names=2,dec=",")
+attach(countries)
 le.fm.0 <- pmax(0,le.fm)  
 ```
-Use function `gam` from package `mgcv`, with `family=poisson`, to fit the following local Poisson regression models: 
+
+We will fit the following local Poisson regression models using the `gam` function from package `mgcv`
 
 * `le.fm.0 ~ inf.mort + life.exp` 
 * `le.fm.0 ~ s(inf.mort) + life.exp` 
@@ -32,15 +35,14 @@ Use function `gam` from package `mgcv`, with `family=poisson`, to fit the follow
 * `le.fm.0 ~ s(inf.mort) + s(life.exp)` 
 * `le.fm.0 ~ s(inf.mort,life.exp)` 
 ```{r,message=FALSE}
-gam1.0 <- gam(le.fm.0 ~ inf.mort + life.exp, data=hir,family=poisson)
-gam1.1 <- gam(le.fm.0 ~ s(inf.mort) + life.exp, data=hir,family=poisson)
-gam1.2 <- gam(le.fm.0 ~ inf.mort + s(life.exp), data=hir,family=poisson)
-gam1.3 <- gam(le.fm.0 ~ s(inf.mort) + s(life.exp), data=hir,family=poisson)
-gam1.4 <- gam(le.fm.0 ~ s(inf.mort,life.exp), data=hir,family=poisson)
+gam1.0 <- gam(le.fm.0 ~ inf.mort + life.exp, data=countries,family=poisson)
+gam1.1 <- gam(le.fm.0 ~ s(inf.mort) + life.exp, data=countries,family=poisson)
+gam1.2 <- gam(le.fm.0 ~ inf.mort + s(life.exp), data=countries,family=poisson)
+gam1.3 <- gam(le.fm.0 ~ s(inf.mort) + s(life.exp), data=countries,family=poisson)
+gam1.4 <- gam(le.fm.0 ~ s(inf.mort,life.exp), data=countries,family=poisson)
 ```
-Use function anova to compare the models we fitted two by two.
+Now we will compare the models using ANOVA. GAM models are directly comparable with GLMs and therefore, we can use classical tests based on model deviance (Chi-squared or F tests) to compare the models. In this excercise we will use Chi-squared test.
 ```{r}
-# Qeustion: The Chisq test can be an exact test (lm models with known scale) or a likelihood-ratio test or a test of the reduction in scaled deviance depending on the method.
 anova(gam1.0,gam1.1,test="Chisq")
 anova(gam1.0,gam1.2,test="Chisq")
 anova(gam1.0,gam1.3,test="Chisq")
@@ -48,40 +50,118 @@ anova(gam1.0,gam1.4,test="Chisq")
 anova(gam1.1,gam1.2,test="Chisq")
 anova(gam1.1,gam1.3,test="Chisq")
 anova(gam1.1,gam1.4,test="Chisq")
-anova(gam1.2,gam1.3,test="Chisq")# gam1.2 is significantly different form model gam1.3 at $\alpha$=0.1
+anova(gam1.2,gam1.3,test="Chisq") # .
 anova(gam1.2,gam1.4,test="Chisq")
 anova(gam1.3,gam1.4,test="Chisq")
 
 ```
 
-#TODO: propose a final model.
+Comparing the base model $le.fm.0 \sim inf.mort + life.exp$ (gam1.0) with the rest of them we do not see a significant reduction in the residual deviance and therefore, none of the alternatives represent an improvement over the base model. The same situation happens in all the cases, with the exception of the model gam1.3, with which, the deviance is reduced 1.4676 points with 0.1 level of significance, obtaining a residual deviance of 83.564.
 
-# section 7.5
+# Hirsutism dataset
+
+In this exercise we are going to use the `Hirsutism` dataset, which contains information about female patients who suffer from this condition. We will build semiparametric models to predict the Ferriman-Gallwey score value at the end of the treatment (12 months) (`FGm12`), using the variables that has been measured at the begining of the clinical trial. These variables are the baseline hirsutism level at the begining of the trial (`FGm0`), the `Treatment`, systolic blood pressure (`SysPres`), diastolic blood pressure (`DiaPres`), `weight` and `height`.
+```{r}
+hirsutism <- read.table("hirsutism.dat",header=T,sep = "\t")
+hirsutism <- hirsutism[complete.cases(hirsutism),]
+attach(hirsutism)
+# plot(hirsutism[,c(1,2,5,6,7,8,9)])
+```
+
+First we are going to build the base model using all the variables as they are and then build semiparametric models to find the better one.
 ```{r,message=FALSE}
+# Base model
+m.base <- gam(FGm12~FGm0 + SysPres + DiaPres + weight + height, data = hirsutism)
+summary(m.base)
+```
 
-# the variables that has been measured at the begining of the clinical trial are FGm0, SysPres, DiaPres, weight, height. 
-# Fit FGm12 ~ some variables at the begining and treatment
-# Firstly, we go with linear
-m1 <- gam(FGm12~FGm0+SysPres+DiaPres+weight+height,data = hir)
+From the summary we can see that the only significant variable is the baseline hirsutism level (FGm0), hence, we will build semiparametrics models applyting smooths to the rest of the variables. Intutively, we will group the systolic and diastolic blood presures and`height` and `weight` varibles.
+```{r, results='hide'}
+m1 <- gam(FGm12~FGm0 + SysPres + s(DiaPres) + weight + height, data = hirsutism)
 summary(m1)
-#From the summary(m1) information, we select FGmo as the linear independent variable
-
-```
-
-```{r}
-# we think SysPres and DiaPres may works together, so we try m2 and m3
-m2 <- gam(FGm12~s(SysPres)+s(DiaPres))
+m2 <- gam(FGm12~FGm0 + s(SysPres) + DiaPres + weight + height, data = hirsutism)
 summary(m2)
-plot(m2,pages=1,residuals=TRUE)
-plot(m2,pages=1,pers=TRUE)
-
-```
-
-```{r}
-m3 <- gam(FGm12~ s(SysPres,DiaPres))
+m3 <- gam(FGm12~FGm0 + s(SysPres, DiaPres) + weight + height, data = hirsutism)
 summary(m3)
-plot(m2,pages=1,residuals=TRUE)
-plot(m2,pages=1,pers=TRUE)
-
-#The GCV score is the minimised generalised cross-validation (GCV) score of the GAM fitted. Smaller values indicated better fitting models.
+m4 <- gam(FGm12~FGm0 + s(SysPres) + s(DiaPres) + weight + height, data = hirsutism)
+summary(m4)
+m5 <- gam(FGm12~FGm0 + SysPres + DiaPres + s(weight) + height, data = hirsutism) #mejore p-value
+summary(m5)
+m6 <- gam(FGm12~FGm0 + SysPres + DiaPres + weight + s(height), data = hirsutism)
+summary(m6)
+m7 <- gam(FGm12~FGm0 + SysPres + DiaPres + s(weight, height), data = hirsutism) # mejor R-sq y GCV
+summary(m7)
+m8 <- gam(FGm12~FGm0 + SysPres + DiaPres + s(weight) + s(height), data = hirsutism)
+summary(m8)
+m9 <- gam(FGm12~FGm0 + s(SysPres) + s(DiaPres) + s(weight) + s(height), data = hirsutism)
+summary(m9)
 ```
+
+Having fit all the semiparametrics models we are going to use anova to compare each of them
+```{r}
+anova(m.base, m1, test = "Chisq")
+anova(m.base, m2, test = "Chisq") # ***
+anova(m.base, m3, test = "Chisq")
+anova(m.base, m4, test = "Chisq")
+anova(m.base, m5, test = "Chisq")
+anova(m.base, m6, test = "Chisq")
+anova(m.base, m7, test = "Chisq")
+anova(m.base, m8, test = "Chisq")
+anova(m.base, m9, test = "Chisq")
+
+anova(m2, m1, test = "Chisq")
+anova(m2, m3, test = "Chisq")
+anova(m2, m4, test = "Chisq")
+anova(m2, m5, test = "Chisq")
+anova(m2, m6, test = "Chisq")
+anova(m2, m7, test = "Chisq")
+anova(m2, m8, test = "Chisq")
+anova(m2, m9, test = "Chisq")
+
+anova(m3, m1, test = "Chisq") # *
+anova(m3, m4, test = "Chisq") # *
+anova(m3, m5, test = "Chisq") # .
+anova(m3, m6, test = "Chisq")
+anova(m3, m7, test = "Chisq")
+anova(m3, m8, test = "Chisq")
+anova(m3, m9, test = "Chisq")
+
+anova(m4, m1, test = "Chisq") # ***
+anova(m4, m5, test = "Chisq")
+anova(m4, m6, test = "Chisq")
+anova(m4, m7, test = "Chisq")
+anova(m4, m8, test = "Chisq")
+anova(m4, m9, test = "Chisq")
+
+anova(m5, m1, test = "Chisq")
+anova(m5, m6, test = "Chisq")
+anova(m5, m7, test = "Chisq")
+anova(m5, m8, test = "Chisq")
+anova(m5, m9, test = "Chisq")
+
+anova(m6, m1, test = "Chisq")
+anova(m6, m7, test = "Chisq")
+anova(m6, m8, test = "Chisq")
+anova(m6, m9, test = "Chisq")
+
+anova(m7, m1, test = "Chisq")
+anova(m7, m8, test = "Chisq")
+anova(m7, m9, test = "Chisq")
+
+anova(m8, m1, test = "Chisq")
+anova(m8, m9, test = "Chisq") # ***
+
+anova(m9, m1, test = "Chisq")
+```
+
+We saw that 6 models were significantly different from the others. So we will inspect the residual deviance to choose the best one.
+```{r}
+anova(m.base, m2, test = "Chisq") # ***
+anova(m3, m1, test = "Chisq") # *
+anova(m3, m4, test = "Chisq") # *
+anova(m3, m5, test = "Chisq") # .
+anova(m4, m1, test = "Chisq") # ***
+anova(m8, m9, test = "Chisq") # ***
+```
+
+Looking at the models we can see that the ones that minimize the residual deviance are the m8 and m9. They have in common that both apply smooth functions over the `height` and `weight` variables, separately. However, because the m8 is simpler, we will choose it as the best model.
