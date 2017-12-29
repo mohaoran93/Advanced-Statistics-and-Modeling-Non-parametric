@@ -39,7 +39,7 @@ set.seed(seed)
 train_set <- createDataPartition(meat$Fat, p = 0.8, list = FALSE)
 train_df <- meat[train_set,]
 test_df <- meat[-train_set,]
-df <- 10:40
+df <- 1:40
 x <- train_df$abs.850
 y <- log(train_df$Fat)
 
@@ -72,7 +72,7 @@ cv <- colMeans(cv_tmp)
 require(Hmisc)
 
 plot(df, mse, type = "l", lwd = 2, col = 3, ylab = "mse and (y - y_hat)", 
-    xlab = "Flexibilty: df value", main = "10-fold Cross-Validation", ylim = c(0.2, 1.5), log = "x")
+    xlab = "Flexibilty: df value", main = "10-fold Cross-Validation", ylim = c(0.2, 0.7))
 #cv_sd <- apply(cv_tmp, 2, sd)/sqrt(n_folds)
 #errbar(df, cv, cv + cv_sd, cv - cv_sd, add = TRUE, col = "steelblue2", pch = 19, lwd = 0.5)
 lines(df, cv, lwd = 2, col = "steelblue2")
@@ -81,7 +81,7 @@ points(df, cv, col = "steelblue2", pch = 19)
 
 ```{r}
 #basis <- bs(x =abs.850.s$x, knots = inner.knots,degree = k)
-basis <- bs(x =abs.850.s$x, df=18,degree = k)
+basis <- bs(x =abs.850.s$x, df=10,degree = k)
 lm.spl <- lm(lgfat~basis)
 plot(abs.850.s$x,lgfat)
 lines(abs.850.s$x,lm.spl$fitted.values,col=2)
