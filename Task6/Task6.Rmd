@@ -31,88 +31,46 @@ inner.knots <- quantile(abs.850.s$x,seq(0,1,length=length(abs.850.s$x)/30))
 ```
 
 ```{r}
-# 1 this part tris to implement the 10-fold cross-validation
-#defd <- c(3:50)
-i <- 1
-for (defd in c(3:20)){
-  models <- lm(lgfat~bs(x =abs.850.s$x, df=defd,degree = k))
-  mse <- predict(models,newdata = test_df)
-}
-  
-```
-
-```{r}
-# 2 this part tris to implement the 10-fold cross-validation
-train_control <- trainControl(method="cv", number=10)
-#grid <- expand.grid(.fL=c(0), .usekernel=c(FALSE)) # seems not necessory for one parameter
-defd <- t(3:50)
-#meat$bs <- bs(x =abs.850.s$x, df=defd,degree = k)
-grid <- expand.grid(defd=c(3:50),intercept=c(0,1))
-#model <- train(lgfat ~ bs(x =abs.850.s$x, df=defd,degree = k),data = meat, trControl=train_control, method="lm")
-model <- train(lgfat ~ bs(x =abs.850.s$x, df=defd,degree = k),data = meat, trControl=train_control, method="lm")
-
-```
-
-```{r}
 # 3 this part tris to implement the 10-fold cross-validation
 # t: Matrix Transpose
-seed <- 0
-train_set <- createDataPartition(meat$Fat, p = 0.8, list = FALSE)
-train_df <- meat[train_set,]
-test_df <- meat[-train_set,]
-df <- 10:40
-x <- train_df$abs.850
-y <- log(train_df$Fat)
-# step 1
-fitted_models_bs <- apply(t(df),2, function(degf) lm(y ~ bs(x =x, df = degf,degree = k)))
-mse <- sapply(fitted_models_bs, function(obj) deviance(obj)/nobs(obj))
-# step 2
-pred <- mapply(function(obj, degf) predict(obj, data.frame(x = test_df$abs.850)), 
-               fitted_models_bs, df)
-te <- sapply(as.list(data.frame(pred)), function(y_hat) mean((log(test_df$Fat) - y_hat)^2))
-
+#seed <- 0
+# omitted test part
 # step 3
 
 n_folds <- 10
-folds_i <- sample(rep(1:n_folds, length.out = 100)) # n_train = 100
+folds_i <- sample(rep(1:n_folds, length.out = length(meat$Fat))) # n_train = 100 length(meat$Fat)
 cv_tmp <- matrix(NA, nrow = n_folds, ncol = length(df))
 for (k in 1:n_folds) {
+  # fold
   test_i <- which(folds_i == k)
   train_xy <- meat[-test_i, ]
   test_xy <- meat[test_i, ]
   x <- train_xy$abs.850
-  y <- log(train_xy$Fat)
-  fitted_models <- apply(t(df), 2, function(degf) lm(y ~ bs(x =x, df = degf,degree = k)))
+  #y <- log(train_xy$Fat)
+  y <- train_xy$Fat
+  fitted_models <- apply(t(df), 2, function(degf) lm(log(y) ~ bs(x =x, df = degf,degree = k)))
   x <- test_xy$abs.850
-  y <- log(test_xy$Fat) # todo, should I use log for test, I guess no
-  pred <- mapply(function(obj, degf) predict(obj, data.frame(bs(x, df = degf))), 
-                 fitted_models, df)
-  cv_tmp[k, ] <- sapply(as.list(data.frame(pred)), function(y_hat) mean((y - 
-                                                                           y_hat)^2))
+  #y <- log(test_xy$Fat) # todo, should I use log for test, I guess no
+  y <- test_xy$Fat
+  pred <- mapply(function(obj, degf) predict(obj, data.frame(bs(x, df = degf))),fitted_models, df)
+  cv_tmp[k, ] <- sapply(as.list(data.frame(pred)), function(y_hat) mean((y - y_hat)^2))
 }
 cv <- colMeans(cv_tmp)
 
-# step 4
+# step 4 plot
 require(Hmisc)
 
-plot(df, mse, type = "l", lwd = 2, col = gray(0.4), ylab = "Prediction error", 
-    xlab = "Flexibilty (spline's degrees of freedom [log scaled])", main = paste0(n_folds, 
-        "-fold Cross-Validation"), ylim = c(0.1, 0.8), log = "x")
-lines(df, te, lwd = 2, col = "darkred", lty = 2)
-cv_sd <- apply(cv_tmp, 2, sd)/sqrt(n_folds)
-errbar(df, cv, cv + cv_sd, cv - cv_sd, add = TRUE, col = "steelblue2", pch = 19, 
-    lwd = 0.5)
+plot(df, mse, type = "l", lwd = 2, col = 3, ylab = "error", 
+    xlab = "Flexibilty: df value", main = "10-fold Cross-Validation", ylim = c(0.2, 0.6), log = "x")
+#cv_sd <- apply(cv_tmp, 2, sd)/sqrt(n_folds)
+#errbar(df, cv, cv + cv_sd, cv - cv_sd, add = TRUE, col = "steelblue2", pch = 19, lwd = 0.5)
 lines(df, cv, lwd = 2, col = "steelblue2")
 points(df, cv, col = "steelblue2", pch = 19)
-legend(x = "bottom", legend = c("Training", "Test", "Cross-validation"), 
-    lty = c(1, 2, 1), lwd = rep(2, 3), col = c(gray(0.4), "darkred", "steelblue2"), 
-    text.width = 0.4, cex = 0.85)
-
 ```
 
 ```{r}
 #basis <- bs(x =abs.850.s$x, knots = inner.knots,degree = k)
-basis <- bs(x =abs.850.s$x, df=12,degree = k)
+basis <- bs(x =abs.850.s$x, df=18,degree = k)
 lm.spl <- lm(lgfat~basis)
 plot(abs.850.s$x,lgfat)
 lines(abs.850.s$x,lm.spl$fitted.values,col=2)
