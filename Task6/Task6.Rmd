@@ -1,6 +1,6 @@
 ---
 title: "Advanced Statistical Modeling"
-subtitle: "Non-parametric models - NIR data analyzed with splines"
+subtitle: "Non-parametric models - Smoothing splines"
 author: "Haoran Mo, Alexandra Yamaui"
 date: "December 28th, 2017"
 output: pdf_document
@@ -8,73 +8,90 @@ output: pdf_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+library(mgcv)
+library(splines)
+library(Hmisc)
 ```
 
 
 # section 6.4 
 ```{r,message=FALSE}
 load("meat.Rdata")
-library(mgcv)
-library(splines)
 attach(meat)
+
 abs.850.s <- sort(abs.850,index.return = TRUE)
 lgfat <- log(Fat)
 lgfat <- lgfat[abs.850.s$ix]
-# point 1: combine lm and bs
-k <- 3
+
+# Reference degrees of freedom
+n <- nrow(meat)
+degrees.freedom <- ceiling(n^(1/5))
 ```
 
-```{r}
-# This part tris to implement the 10-fold cross-validation
-# t(): Matrix Transpose
+```{r, warning=FALSE}
+# 10-fold cross-validation to choose the righ degrees of freedom (number of knots)
 seed <- 1800
 set.seed(seed)
+
 # step 1, find the relation between trainning error ~ df
 train_set <- createDataPartition(lgfat, p = 0.8, list = FALSE)
 train_df <- meat[train_set,]
 test_df <- meat[-train_set,]
-df <- 3:40
-x <- sort(train_df$abs.850,index.return = TRUE)
+
+# Degrees of freedom
+degrees.freedom <- 3:40
+
+x <- sort(train_df$abs.850, index.return = TRUE)
 y <- log(train_df$Fat)[x$ix]
 x <- x$x
 
-fitted_models_bs <- apply(t(df),2, function(degf) lm(y ~ bs(x =x, df = degf,degree = k)))
-mse <- sapply(fitted_models_bs, function(obj) deviance(obj)/nobs(obj))
+# Polynomial degree
+q <- 3
 
-# step 2 10-fold
+# Models fitted with different values of degrees of freedom
+fitted_models_bs <- apply(t(degrees.freedom), 2, function(deg_freed) lm(y ~ bs(x = x, df = deg_freed, degree = q)))
+
+# Adjusted Mean Deviance
+amd <- sapply(fitted_models_bs, function(model) deviance(model)/nobs(model))
+
+# folds
 n_folds <- 10
 folds_i <- sample(rep(1:n_folds, length.out = length(meat$Fat)))
 
-cv_tmp <- matrix(NA, nrow = n_folds, ncol = length(df))
+cv_results <- matrix(NA, nrow = n_folds, ncol = length(degrees.freedom))
+
 for (k in 1:n_folds) {
-  # get 10 folds
   test_i <- which(folds_i == k)
   train_xy <- meat[-test_i, ]
   test_xy <- meat[test_i, ]
-  x <- sort(train_xy$abs.850,index.return=TRUE)
-  y <- log(train_xy$Fat)[x$ix]
-  x <- x$x
-  fitted_models <- apply(t(df), 2, function(degf) lm(y ~ bs(x =x, df = degf,degree = k)))
-  x <- sort(test_xy$abs.850,index.return=TRUE)
-  y <- log(test_xy$Fat)[x$ix]
-  x <- x$x
   
-  # randomly, some 'x' values may beyond boundary knots. So I set the seed.
-  pred <- mapply(function(obj, degf) predict(obj, data.frame(bs(x, df = degf,degree = k))),fitted_models, df)
-  cv_tmp[k, ] <- sapply(as.list(data.frame(pred)), function(y_hat) mean((y - y_hat)^2))
+  x.train <- sort(train_xy$abs.850, index.return=TRUE)
+  y.train <- log(train_xy$Fat)[x.train$ix]
+  x.train <- x.train$x
+  
+  x.test <- sort(test_xy$abs.850, index.return=TRUE)
+  y.test <- log(test_xy$Fat)[x.test$ix]
+  x.test <- x.test$x
+  
+  # Fit different linear models for every value of degrees of freedom
+  fitted_models <- apply(t(degrees.freedom), 2, function(deg_freed) lm(y.train ~ bs(x = x.train, df = deg_freed, degree = q)))
+  
+  # Prediction over validation (test) set
+  pred <- mapply(function(model, deg_freed) predict(model, data.frame(bs(x = x.test, df = deg_freed, degree = q))), fitted_models, degrees.freedom)
+  
+  # Calculate the Mean Square Error
+  cv_results[k, ] <- sapply(as.list(data.frame(pred)), function(y_hat) mean((y.test - y_hat)^2))
 }
-cv <- colMeans(cv_tmp)
 
-# step 4 plot
-require(Hmisc)
+# Take the mean of the cross-validation mean square error
+cv <- colMeans(cv_results)
 
-plot(df, mse, type = "l", lwd = 2, col = 3, ylab = "mse:green line; (y - y_hat): blue line", 
-    xlab = "Flexibilty: df value", main = "10-fold Cross-Validation", ylim = c(0.2, 0.7))
-cv_sd <- apply(cv_tmp, 2, sd)/sqrt(n_folds)
-errbar(df, cv, cv + cv_sd, cv - cv_sd, add = TRUE, col = "steelblue2", pch = 19, lwd = 0.5)
-lines(df, cv, lwd = 2, col = "steelblue2")
-points(df, cv, col = "steelblue2", pch = 19)
-# The green line is mse of trainning. As df increase, the model tend to be overfiting. The best df valuse shoud be around 10 from the viewing of bule line.
+plot(degrees.freedom, amd, type = "l", lwd = 2, col = 3, ylab = "amd:green line; (y - y_hat): blue line", 
+    xlab = "Degrees of freedom", main = "10-fold Cross-Validation", ylim = c(0, 1))
+cv_sd <- apply(cv_results, 2, sd)/sqrt(n_folds)
+# errbar(degrees.freedom, cv, cv + cv_sd, cv - cv_sd, add = TRUE, col = "steelblue2", pch = 19, lwd = 0.5)
+lines(degrees.freedom, cv, lwd = 2, col = "steelblue2")
+points(degrees.freedom, cv, col = "steelblue2", pch = 19)
 ```
 
 
