@@ -1,5 +1,8 @@
 ---
-title: "Task6"
+title: "Advanced Statistical Modeling"
+subtitle: "Non-parametric models - NIR data analyzed with splines"
+author: "Haoran Mo, Alexandra Yamaui"
+date: "December 28th, 2017"
 output: pdf_document
 ---
 
@@ -74,6 +77,8 @@ points(df, cv, col = "steelblue2", pch = 19)
 # The green line is mse of trainning. As df increase, the model tend to be overfiting. The best df valuse shoud be around 10 from the viewing of bule line.
 ```
 
+
+# section 6.4 point 2
 ```{r}
 #point 1 combine lm and bs, with parameter df obtained from previous 10-fold cross-validation.
 #basis <- bs(x =abs.850.s$x, knots = inner.knots,degree = k)
@@ -89,10 +94,6 @@ sm.spl <- smooth.spline(abs.850.s$x,lgfat,df=df_obtained)
 pred.lgfat <- predict(sm.spl,x = new.abs8)
 lines(pred.lgfat,col=3)
 # we can find that two lines match well.
-```
-# section 6.4 point 2
-```{r,message=FALSE}
-
 ```
 
 
