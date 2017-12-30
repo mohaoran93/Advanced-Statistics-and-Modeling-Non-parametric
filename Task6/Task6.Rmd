@@ -14,34 +14,26 @@ load("meat.Rdata")
 library(mgcv)
 library(splines)
 attach(meat)
-lgfat <- log(Fat)
 abs.850.s <- sort(abs.850,index.return = TRUE)
+lgfat <- log(Fat)
 lgfat <- lgfat[abs.850.s$ix]
 # point 1: combine lm and bs
 k <- 3
-my.knots <- abs.850.s$x
-
-# 1 inner.knots
-inner.knots <- my.knots[-c(1,length(my.knots))] 
-
-# 2 inner.knots
-inner.knots <- quantile(abs.850.s$x,seq(0,1,length=length(abs.850.s$x)/30))
-# TODO I do not know how to process this "Use a 10-fold cross-validation procedure to determine the number of inner knots."
-# I guess we wil use cross-validation to determine the value of df.
 ```
 
 ```{r}
-# 3 this part tris to implement the 10-fold cross-validation
-# t: Matrix Transpose
+# This part tris to implement the 10-fold cross-validation
+# t(): Matrix Transpose
 seed <- 1800
 set.seed(seed)
 # step 1, find the relation between trainning error ~ df
-train_set <- createDataPartition(meat$Fat, p = 0.8, list = FALSE)
+train_set <- createDataPartition(lgfat, p = 0.8, list = FALSE)
 train_df <- meat[train_set,]
 test_df <- meat[-train_set,]
-df <- 1:40
-x <- train_df$abs.850
-y <- log(train_df$Fat)
+df <- 3:40
+x <- sort(train_df$abs.850,index.return = TRUE)
+y <- log(train_df$Fat)[x$ix]
+x <- x$x
 
 fitted_models_bs <- apply(t(df),2, function(degf) lm(y ~ bs(x =x, df = degf,degree = k)))
 mse <- sapply(fitted_models_bs, function(obj) deviance(obj)/nobs(obj))
@@ -56,11 +48,13 @@ for (k in 1:n_folds) {
   test_i <- which(folds_i == k)
   train_xy <- meat[-test_i, ]
   test_xy <- meat[test_i, ]
-  x <- train_xy$abs.850
-  y <- log(train_xy$Fat)
+  x <- sort(train_xy$abs.850,index.return=TRUE)
+  y <- log(train_xy$Fat)[x$ix]
+  x <- x$x
   fitted_models <- apply(t(df), 2, function(degf) lm(y ~ bs(x =x, df = degf,degree = k)))
-  x <- test_xy$abs.850
-  y <- log(test_xy$Fat)
+  x <- sort(test_xy$abs.850,index.return=TRUE)
+  y <- log(test_xy$Fat)[x$ix]
+  x <- x$x
   
   # randomly, some 'x' values may beyond boundary knots. So I set the seed.
   pred <- mapply(function(obj, degf) predict(obj, data.frame(bs(x, df = degf,degree = k))),fitted_models, df)
@@ -81,17 +75,17 @@ points(df, cv, col = "steelblue2", pch = 19)
 ```
 
 ```{r}
+#point 1 combine lm and bs, with parameter df obtained from previous 10-fold cross-validation.
 #basis <- bs(x =abs.850.s$x, knots = inner.knots,degree = k)
-basis <- bs(x =abs.850.s$x, df=10,degree = k)
+df_obtained <- 10
+basis <- bs(x =abs.850.s$x, df=df_obtained,degree = k)
 lm.spl <- lm(lgfat~basis)
 plot(abs.850.s$x,lgfat)
 lines(abs.850.s$x,lm.spl$fitted.values,col=2)
-#abline(v=inner.knots,lty=2,col="grey")
-
 
 # point 2: smooth.spline
-new.abs8 <- seq(min(abs.850.s$x),max(abs.850.s$x),length=1000)
-sm.spl <- smooth.spline(abs.850.s$x,lgfat,df=10)
+new.abs8 <- seq(min(abs.850.s$x),max(abs.850.s$x),length=length(abs.850.s$x))
+sm.spl <- smooth.spline(abs.850.s$x,lgfat,df=df_obtained)
 pred.lgfat <- predict(sm.spl,x = new.abs8)
 lines(pred.lgfat,col=3)
 # we can find that two lines match well.
