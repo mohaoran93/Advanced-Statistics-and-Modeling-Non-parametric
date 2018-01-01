@@ -54,13 +54,13 @@ for (k in 1:n_folds) {
   x <- sort(train_xy$abs.850,index.return=TRUE)
   y <- log(train_xy$Fat)[x$ix]
   x <- x$x
-  fitted_models <- apply(t(df), 2, function(degf) lm(y ~ bs(x =x, df = degf,degree = k)))
+  fitted_models <- apply(t(df), 2, function(degf) lm(y ~ bs(x =x, df = degf,degree = 3))) # mark
   x <- sort(test_xy$abs.850,index.return=TRUE)
   y <- log(test_xy$Fat)[x$ix]
   x <- x$x
   
   # randomly, some 'x' values may beyond boundary knots. So I set the seed.
-  pred <- mapply(function(obj, degf) predict(obj, data.frame(bs(x, df = degf,degree = k))),fitted_models, df)
+  pred <- mapply(function(obj, degf) predict(obj, data.frame(bs(x, df = degf,degree = 3))),fitted_models, df)
   cv_tmp[k, ] <- sapply(as.list(data.frame(pred)), function(y_hat) mean((y - y_hat)^2))
 }
 cv <- colMeans(cv_tmp)
